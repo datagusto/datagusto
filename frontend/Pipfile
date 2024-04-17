@@ -1,0 +1,36 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+streamlit = "*"
+pandas = "*"
+numpy = "*"
+python-dotenv = "*"
+streamlit-pydantic = "*"
+pydantic = "*"
+fastapi = "*"
+uvicorn = "*"
+extra-streamlit-components = "*"
+sqlalchemy = "*"
+bcrypt = "*"
+transformers = "*"
+torch = "*"
+accelerate = "*"
+argparse = "*"
+sentencepiece = "*"
+pymysql = "*"
+psycopg2-binary = "*"
+cryptography = "*"
+pyvis = "*"
+sqlparse = "*"
+requests = "*"
+
+[dev-packages]
+pandas-stubs = "*"
+sqlalchemy-stubs = "*"
+types-requests = "*"
+
+[requires]
+python_version = "3.9"

@@ -1,0 +1,12 @@
+*.pyc
+backend/__pycache__/*
+backend/db/*
+!backend/db/.gitkeep
+frontend/__pycache__/*
+.DS_Store
+.idea/*
+*.log
+backend/models/*
+backend/.env
+backend/*.env
+data/

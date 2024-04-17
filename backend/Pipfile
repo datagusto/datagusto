@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+sqlalchemy = "*"
+alembic = "*"
+pyyaml = "*"
+mysql-connector-python = "*"
+langchain = "*"
+sentence-transformers = "*"
+weaviate-client = "*"
+langchain-openai = "*"
+pydantic-settings = "*"
+pytz = "*"
+python-dotenv = "*"
+requests = "*"
+faiss-cpu = "*"
+transformers = "*"
+pandas = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

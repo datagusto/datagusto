@@ -1,0 +1,84 @@
+from logging import getLogger
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from langchain_core.documents import Document
+from langchain_text_splitters import CharacterTextSplitter
+
+import crud
+import schemas
+from adapters.mysql import MySQLConnection
+from .sub import faiss_client, load_model, generate_text_from_data, flatten_concatenation
+
+
+logger = getLogger("uvicorn.app")
+
+
+
+
+
+def indexing(data_source_id: int, db: Session):
+    # load tokenizer
+    # model_path = "./models/model_ver1.0"
+    # model, tokenizer = load_model(model_path)
+
+    # get data from target data source
+    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+    if not data_source:
+        logger.warning("data_source_id: %s not found", data_source_id)
+        return HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
+    
+    # create connection to data source
+    connection = None
+    if data_source.type == schemas.DataSourceType.MySQL:
+        logger.debug("Creating MySQL connection: data_source_id=%s", data_source_id)
+        connection = MySQLConnection(config=data_source.connection)
+
+    # create index
+    column_information = crud.get_columns_in_data_source(db, data_source_id)
+    repository_texts = []
+    faiss_docs = []
+    for column in column_information:
+        logger.info("data_source_id: %s, table_name: %s, column_name: %s, data_type: %s", data_source_id, column.table_name, column.column_name, column.column_info["data_type"])
+        # skip unsupported column types
+        # TODO: check with the white list of supported column types instead of black list
+        if column.column_info["data_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
+            continue
+        # select column data
+        data = connection.select_column(column.table_name, column.column_name, limit=1000)
+        data = flatten_concatenation(data)
+        logger.info("data: %s", data[:5])
+        # generate text
+        text = generate_text_from_data(column.table_name, column.column_name, data)
+        logger.info("text: %s", text[:50])
+        repository_texts.append(text)
+
+        faiss_docs.append(Document(
+            page_content=text,
+            metadata={
+                "data_source_id": data_source_id,
+                "database_name": data_source.name,
+                "table_name": column.table_name,
+                "column_name": column.column_name,
+                "column_type": column.column_info["data_type"]
+            })
+        )
+
+    # save index
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    faiss_docs = text_splitter.split_documents(faiss_docs)
+    faiss_client.save(faiss_docs)
+    
+    # tokenize texts
+    # inputs = tokenizer(repository_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+    # outputs = model(**inputs)
+    # last_hidden_states = outputs.last_hidden_state
+    # cls_token_vector = last_hidden_states[:, 0, :].detach().cpu().numpy()
+
+    # # create faiss index
+    # d = cls_token_vector.shape[1]
+    # index = faiss.IndexFlatL2(d)
+    
+    # # persist faiss index
+    # faiss.write_index(index, "./db/faiss/{data_source_id}.index")

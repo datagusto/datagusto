@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+    mysql:
+        image: mysql:5.7
+        container_name: datagusto-mysql
+        restart: always
+        platform: linux/amd64
+        environment:
+            MYSQL_DATABASE: 'db'
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+            TZ: "Asia/Tokyo"
+        ports:
+            - '3306:3306'
+        volumes:
+            - ./config/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+            - ./config/mysql/init:/docker-entrypoint-initdb.d
+            - ./data/mysql/:/var/lib/mysql
+        networks:
+            - app_net

@@ -1,0 +1,41 @@
+version: '3.3'
+
+services:
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: datagusto-backend
+        ports:
+            - "8000:8000"
+        environment:
+            DISK_USE_READONLY_PERCENTAGE: 97
+        env_file:
+            - ./backend/.env
+        networks:
+            - app_net
+        volumes:
+            - backend-data:/usr/src/app/db
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: datagusto-frontend
+        ports:
+            - "8501:8501"
+        env_file:
+            - ./frontend/.env
+        depends_on:
+            - backend
+        networks:
+            - app_net
+        volumes:
+            - frontend-data:/usr/src/app/db
+
+volumes:
+    backend-data:
+    frontend-data:
+
+networks:
+    app_net:
