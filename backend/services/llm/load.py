@@ -9,7 +9,7 @@ llm: Optional[LLMBase] = None
 if get_settings().LLM_USAGE_TYPE == "AZURE_OPENAI":
     llm = AzureOpenAILLM()
 
-if get_settings().LLM_USAGE_TYPE == "OPENAI_PROXY":
+if get_settings().LLM_USAGE_TYPE == "OPENAI":
     llm = OpenAIProxyLLM()
 
 if get_settings().LLM_USAGE_TYPE == "CUSTOM_PROXY":
