@@ -12,6 +12,10 @@
     <a href="https://www.datagusto.ai">
       Homepage
     </a>
+    |
+    <a href="https://github.com/datagusto/datagusto/wiki/">
+      Documentation (Wiki)
+    </a>
   </h4>
 </div>
 
