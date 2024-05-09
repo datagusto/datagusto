@@ -39,6 +39,12 @@ git clone https://github.com/datagusto/datagusto.git
 Create a `.env` file by copying `backend/.env.example` file
 Then replace necessary values with your own.
 
+Set what processing unit to use for embedding:
+```shell
+USE_GPU = "cpu"
+```
+If you want to use GPU, set `USE_GPU = "cuda"`.
+
 To use OpenAI APIs:
 ```shell
 LLM_USAGE_TYPE = OPENAI
