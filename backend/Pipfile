@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://download.pytorch.org/whl"
+verify_ssl = true
+name = "pytorch"
+
 [packages]
 fastapi = "*"
 uvicorn = "*"
@@ -10,6 +15,7 @@ sqlalchemy = "*"
 alembic = "*"
 pyyaml = "*"
 mysql-connector-python = "*"
+torch = {index = "pytorch"}
 langchain = "*"
 sentence-transformers = "*"
 weaviate-client = "*"
