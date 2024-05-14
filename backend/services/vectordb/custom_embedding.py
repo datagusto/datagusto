@@ -1,14 +1,17 @@
 from typing import Any, Optional, Dict, List
 
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.pydantic_v1 import Extra, Field
 from sentence_transformers import SentenceTransformer
+
+from settings import get_settings
 
 DEFAULT_MODEL_NAME = "thenlper/gte-large"
 
 
 class CustomEmbedding(Embeddings):
-    """HuggingFace sentence_transformers embedding models.
+    """Copied and edited HuggingFaceEmbeddings embedding models.
 
     To use, you should have the ``sentence_transformers`` python package installed.
 
@@ -39,8 +42,10 @@ class CustomEmbedding(Embeddings):
         """Initialize the sentence_transformer."""
         super().__init__(**kwargs)
 
+        self.model_kwargs = {'device': get_settings().USE_GPU}
+
         self.client = SentenceTransformer(
-            self.model_name, cache_folder=self.cache_folder, device="cpu"
+            self.model_name, cache_folder=self.cache_folder, **self.model_kwargs
         )
 
     class Config:

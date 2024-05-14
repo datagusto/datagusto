@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    USE_GPU: Optional[str] = "cpu"
     LLM_USAGE_TYPE: str
     OPENAI_API_VERSION: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None

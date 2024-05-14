@@ -20,10 +20,6 @@ RUN pip install pipenv
 COPY ./Pipfile* ./
 RUN pipenv install --system --deploy --ignore-pipfile
 
-# download necessary model while building container image
-COPY ./services/vectordb/custom_embedding.py ./custom_embedding.py
-RUN python -c "from custom_embedding import CustomEmbedding; CustomEmbedding()"
-
 # Copy source code
 COPY ./ ./
 
