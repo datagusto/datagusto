@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -61,3 +61,10 @@ class JoinableTableIndexingCreate(BaseModel):
 class JoinableTableJoinData(BaseModel):
     data_source_id: int
     table_name: str
+
+class SchemaMatchingResult(BaseModel):
+    target_data_columns: List[str]
+    target_data_matched_columns: List[str]
+    source_data_columns: List[str]
+    source_data_matched_columns: List[str]
+    matching: dict

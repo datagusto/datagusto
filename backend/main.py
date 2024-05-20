@@ -1,11 +1,15 @@
 import os
 from logging import getLogger
 import base64
+from io import StringIO
+from typing import List
+import json
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, Request, Form
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from services.vectordb.utils import generate_docs_from_columns
 
@@ -23,6 +27,7 @@ from services.vectordb.load import storage_client, storage_client_join
 from services.joinable_table.offline import indexing
 from services.joinable_table.online import join_data
 from adapters.connections import get_connection
+from services.data_matching.data_matching import find_schema_matching, find_data_matching
 
 logger = getLogger("uvicorn.app")
 
@@ -231,3 +236,60 @@ def exception_handler(request, exc):
         "message": "Internal Server Error",
         "detail": str(exc)
     }, 200
+
+
+@app.post("/find_schema_matching/", response_model=schemas.SchemaMatchingResult)
+def post_find_schema_matching(target_file: UploadFile = File(...), source_file: UploadFile = File(...)) -> dict:
+    target_df = pd.read_csv(target_file.file)
+    target_name = target_file.filename
+    source_df = pd.read_csv(source_file.file)
+    source_name = source_file.filename
+
+    matching = find_schema_matching(target_name, target_df, source_name, source_df)
+
+    target_data_matched_columns = list(matching.keys())
+    tmp = []
+    for v in matching.values():
+        tmp += v
+    source_data_matched_columns = list(set(tmp))
+
+    response = {
+        "target_data_columns": target_df.columns.tolist(),
+        "target_data_matched_columns": target_data_matched_columns,
+        "source_data_columns": source_df.columns.tolist(),
+        "source_data_matched_columns": source_data_matched_columns,
+        "matching": matching
+    }
+
+    return response
+
+
+@app.post("/find_data_matching/")
+def post_find_data_matching(matching: str = Form(...), target_file: UploadFile = File(...), source_file: UploadFile = File(...)):
+    matching_dict = json.loads(matching)
+
+    target_df = pd.read_csv(target_file.file)
+    source_df = pd.read_csv(source_file.file)
+
+    data_matching_result = find_data_matching(target_df, source_df, matching_dict)
+
+    pair_columns = ["__target_index", "__source_index"]
+    pair_df = pd.DataFrame(data_matching_result, columns=pair_columns)
+    merged_df = target_df.merge(pair_df, left_index=True, right_on="__target_index", how="left")
+    for col in source_df.columns:
+        col_tmp = col
+        if col_tmp in merged_df.columns:
+            col_tmp = col_tmp + "_source"
+        merged_df[col_tmp] = merged_df["__source_index"].map(source_df[col])
+    
+    merged_df = merged_df.drop(columns=pair_columns, axis=1)
+
+    # DataFrameをCSV形式に変換
+    buffer = StringIO()
+    merged_df.to_csv(buffer, index=False)
+    buffer.seek(0)
+
+    # CSVファイルをストリーミングレスポンスとして返す
+    response = StreamingResponse(iter([buffer.getvalue()]), media_type="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    return response
