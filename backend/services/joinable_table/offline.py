@@ -6,16 +6,12 @@ from sqlalchemy.orm import Session
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
 
-import crud
-import schemas
-from adapters.mysql import MySQLConnection
-from .sub import faiss_client, load_model, generate_text_from_data, flatten_concatenation
-
+from adapters.connections import get_connection
+from database import crud
+from .sub import generate_text_from_data, flatten_concatenation
+from ..vectordb.load import storage_client_join
 
 logger = getLogger("uvicorn.app")
-
-
-
 
 
 def indexing(data_source_id: int, db: Session):
@@ -30,20 +26,17 @@ def indexing(data_source_id: int, db: Session):
         return HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
     
     # create connection to data source
-    connection = None
-    if data_source.type == schemas.DataSourceType.MySQL:
-        logger.debug("Creating MySQL connection: data_source_id=%s", data_source_id)
-        connection = MySQLConnection(config=data_source.connection)
+    connection = get_connection(data_source)
 
     # create index
     column_information = crud.get_columns_in_data_source(db, data_source_id)
     repository_texts = []
-    faiss_docs = []
+    docs = []
     for column in column_information:
-        logger.info("data_source_id: %s, table_name: %s, column_name: %s, data_type: %s", data_source_id, column.table_name, column.column_name, column.column_info["data_type"])
+        logger.info("data_source_id: %s, table_name: %s, column_name: %s, column_type: %s", data_source_id, column.table_name, column.column_name, column.column_info["column_type"])
         # skip unsupported column types
         # TODO: check with the white list of supported column types instead of black list
-        if column.column_info["data_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
+        if column.column_info["column_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
             continue
         # select column data
         data = connection.select_column(column.table_name, column.column_name, limit=1000)
@@ -54,21 +47,21 @@ def indexing(data_source_id: int, db: Session):
         logger.info("text: %s", text[:50])
         repository_texts.append(text)
 
-        faiss_docs.append(Document(
+        docs.append(Document(
             page_content=text,
             metadata={
                 "data_source_id": data_source_id,
                 "database_name": data_source.name,
                 "table_name": column.table_name,
                 "column_name": column.column_name,
-                "column_type": column.column_info["data_type"]
+                "column_type": column.column_info["column_type"]
             })
         )
 
     # save index
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    faiss_docs = text_splitter.split_documents(faiss_docs)
-    faiss_client.save(faiss_docs)
+    docs = text_splitter.split_documents(docs)
+    storage_client_join.save(docs)
     
     # tokenize texts
     # inputs = tokenizer(repository_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)

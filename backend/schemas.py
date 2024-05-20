@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from database import DataSourceType
+from adapters.types import DataSourceType
 
 
 class DataSourceBase(BaseModel):
@@ -53,8 +53,10 @@ class DatabaseInformation(DatabaseInformationBase):
     class Config:
         orm_mode = True
 
+
 class JoinableTableIndexingCreate(BaseModel):
     data_source_id: int
+
 
 class JoinableTableJoinData(BaseModel):
     data_source_id: int

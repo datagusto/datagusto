@@ -3,6 +3,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://download.pytorch.org/whl"
+verify_ssl = true
+name = "pytorch"
+
 [packages]
 fastapi = "*"
 uvicorn = "*"
@@ -10,15 +15,16 @@ sqlalchemy = "*"
 alembic = "*"
 pyyaml = "*"
 mysql-connector-python = "*"
+torch = {version = "2.2.2", index = "pytorch"}
 langchain = "*"
 sentence-transformers = "*"
 weaviate-client = "*"
 langchain-openai = "*"
-pydantic-settings = "*"
 pytz = "*"
 python-dotenv = "*"
 requests = "*"
 faiss-cpu = "*"
+psycopg2-binary = "*"
 transformers = "*"
 pandas = "*"
 

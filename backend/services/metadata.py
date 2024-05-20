@@ -1,27 +1,24 @@
+import os
 from logging import getLogger
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-import crud
 import schemas
-from adapters.mysql import MySQLConnection
+from adapters.connections import get_connection
+from database import crud
 
 logger = getLogger("uvicorn.app")
 
 
 def get_metadata(data_source_id: int, db: Session):
     logger.debug("Starting to get metadata from data source: data_source_id=%s", data_source_id)
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
 
-    connection = None
-    if data_source.type == schemas.DataSourceType.MySQL:
-        logger.debug("Creating MySQL connection: data_source_id=%s", data_source_id)
-        connection = MySQLConnection(config=data_source.connection)
-
+    connection = get_connection(data_source)
     logger.debug("Getting all column data (metadata) from the database. data_source_id=%s, database_name=%s",
                  data_source_id, connection.get_database_name())
     all_columns = connection.get_all_columns()
@@ -31,6 +28,9 @@ def get_metadata(data_source_id: int, db: Session):
 
 
 def save_metadata(data_source_id: int, database_name: str, all_columns: dict, db: Session):
+    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id)
+
+    # save to database
     logger.debug("Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
     database_column_information = []

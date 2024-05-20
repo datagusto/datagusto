@@ -10,3 +10,6 @@ backend/models/*
 backend/.env
 backend/*.env
 data/
+docker-volume/*
+/.env
+/.env.*

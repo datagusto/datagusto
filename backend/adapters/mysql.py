@@ -1,19 +1,26 @@
 from logging import getLogger
 
 import mysql.connector
-from pydantic import BaseModel
 
 from .connection import Connection
+from .types import MySQLConfig
 
 logger = getLogger("uvicorn.app")
 
+# SHOW FULL COLUMNS FROM TABLE_NAME shows privileges and comment (describe table_name does not show comment)
+COLUMN_INFORMATION_SQL = "SHOW FULL COLUMNS FROM {table_name}"
 
-class MySQLConfig(BaseModel):
-    host: str
-    port: int = 3306
-    username: str
-    password: str
-    database: str
+# get relationship information from information_schema
+RELATIONSHIP_INFORMATION_SQL = """
+SELECT
+    column_name, referenced_table_name, referenced_column_name
+FROM
+    INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE
+    TABLE_SCHEMA = '{database_name}' AND
+    TABLE_NAME = '{table_name}' AND
+    REFERENCED_TABLE_NAME IS NOT NULL
+"""
 
 
 class MySQLConnection(Connection):
@@ -64,22 +71,33 @@ class MySQLConnection(Connection):
         self.set_cursor()
         all_columns = {}
         for table in tables:
-            # "show full columns from table_name" shows privileges and comment
-            # self.cursor.execute(f"DESCRIBE {table_name}")
-            self.cursor.execute(f"show full columns from {table}")
+            logger.debug("Getting column information (metadata) of table :" + table)
+            self.cursor.execute(COLUMN_INFORMATION_SQL.format(table_name=table))
             columns = self.cursor.fetchall()
-            all_columns[table] = [
-                {
-                    "column_name": column[0],
-                    "data_type": column[1],
-                    # "collation": column[2],
-                    # "is_nullable": column[3],
-                    # "key": column[4],
-                    # "default_value": column[5],
-                    "extra": column[6],
-                    # "privileges": column[7],
-                    "comment": column[8]
-                } for column in columns]
+            self.cursor.execute(RELATIONSHIP_INFORMATION_SQL.format(
+                database_name=self.get_database_name(), table_name=table))
+            relationships = self.cursor.fetchall()
+
+            for column in columns:
+                column_name, column_type, collation, is_nullable, key, default_value, extra, privileges, comment = column
+                column_info = {
+                    "column_name": column_name,
+                    "column_type": column_type,
+                    "extra": extra,
+                    "comment": comment
+                }
+
+                # Using next() with a generator expression to find the first matching relationship or None
+                _, table_name, column_name = next((r for r in relationships if column_name == r[0]), (None, None, None))
+                if table_name:
+                    column_info.update({
+                        "referenced_table_name": table_name,
+                        "referenced_column_name": column_name
+                    })
+                    relationships.remove((column_name, table_name, column_name))
+
+                # Using dict.setdefault to simplify the if-else block
+                all_columns.setdefault(table, []).append(column_info)
         self.close()
         return all_columns
     

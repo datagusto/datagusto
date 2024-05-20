@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-import models
+from . import models
 import schemas
 
 
@@ -36,11 +36,14 @@ def clear_database_column_information(db: Session):
     db.commit()
     return True
 
-def get_columns_in_data_source(db: Session, data_source_id: int) -> list[tuple]:
+
+def get_columns_in_data_source(db: Session, data_source_id: int) -> list[schemas.DatabaseInformation]:
     return db.query(models.DatabaseColumnInformation).filter(models.DatabaseColumnInformation.data_source_id == data_source_id).all()
+
 
 def get_tables(db: Session) -> list[str]:
     return db.query(models.DatabaseColumnInformation.data_source_id, models.DatabaseColumnInformation.table_name).distinct().all()
 
-def get_columns_in_table(db: Session, data_source_id: int, table_name: str) -> list[tuple]:
+
+def get_columns_in_table(db: Session, data_source_id: int, table_name: str) -> list[schemas.DatabaseInformation]:
     return db.query(models.DatabaseColumnInformation).filter(models.DatabaseColumnInformation.data_source_id == data_source_id, models.DatabaseColumnInformation.table_name == table_name).all()
