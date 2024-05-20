@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+from typing import Optional
 
 BACKEND_ENDPOINT = os.environ["BACKEND_ENDPOINT"]
 
@@ -111,3 +112,40 @@ def get_table_data(data_source_id, table_name, limit=1000):
     response = get_request(path)
     print(response.json())
     return response.json()
+
+
+def post_find_schema_matching(target_file, source_file):
+    path = "find_schema_matching/"
+    files = {
+        "target_file": (target_file.name, target_file, "text/csv"),
+        "source_file": (source_file.name, source_file, "text/csv")
+    }
+    url = f"{BACKEND_ENDPOINT}/{path}"
+    response = requests.request(
+        method="POST",
+        url=url,
+        timeout=3600,
+        files=files
+    )
+    
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+    
+    return response_dict
+
+
+def post_find_data_matching(target_file, source_file, matching):
+    path = "find_data_matching/"
+    files = [
+        ("target_file", (target_file.name, target_file, "text/csv")),
+        ("source_file", (source_file.name, source_file, "text/csv"))
+    ]
+    payload = {"matching": json.dumps(matching)}
+
+    url = f"{BACKEND_ENDPOINT}/{path}"
+    response = requests.post(
+        url=url,
+        files=files,
+        data=payload,
+    )
+    return response
