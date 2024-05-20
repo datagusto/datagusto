@@ -5,9 +5,15 @@ logger = getLogger("uvicorn.app")
 
 
 class Connection(ABC):
+    owner_id: int
+    name: str
+    description: str
     config: dict
 
-    def __init__(self, config):
+    def __init__(self, owner_id: int, name: str, description: str, config: dict):
+        self.owner_id = owner_id
+        self.name = name
+        self.description = description
         self.config = config
         valid = self.validate_config()
         if not valid:

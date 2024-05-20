@@ -15,16 +15,16 @@ sqlalchemy = "*"
 alembic = "*"
 pyyaml = "*"
 mysql-connector-python = "*"
-torch = {index = "pytorch"}
+torch = {version = "2.2.2", index = "pytorch"}
 langchain = "*"
 sentence-transformers = "*"
 weaviate-client = "*"
 langchain-openai = "*"
-pydantic-settings = "*"
 pytz = "*"
 python-dotenv = "*"
 requests = "*"
 faiss-cpu = "*"
+psycopg2-binary = "*"
 transformers = "*"
 pandas = "*"
 

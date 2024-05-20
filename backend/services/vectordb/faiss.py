@@ -3,9 +3,9 @@ from logging import getLogger
 from typing import Optional
 
 from langchain_community.vectorstores.faiss import FAISS
+from langchain_core.documents import Document
 
 from .custom_embedding import CustomEmbedding
-from .utils import generate_docs_from_columns
 from .vectordb import VectorDatabase
 
 # path need to be cross platform compatible (windows linux macos)
@@ -24,33 +24,38 @@ class FaissDB(VectorDatabase):
         self.storage_path = storage_path
         super().__init__(client, embeddings=embeddings)
 
-    def save(self, all_columns: list[dict], database_name: str, data_source_id: int, **kwargs):
-        docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
-
+    def save(self, docs: list[Document], storage_path: Optional[str] = None, **kwargs):
         logger.debug("VectorDB log: Creating vectorstore instance")
         db = FAISS.from_documents(docs, self.embeddings)
 
         # insert to vectorstore
         logger.debug("VectorDB log: Inserting documents to vectorstore")
-        local_db = self._load_local_vectorstore()
+        local_db = self._load_local_vectorstore(storage_path)
         if local_db:
             db.merge_from(local_db)
-        db.save_local(self.storage_path)
+        db.save_local(storage_path or self.storage_path)
 
-    def query(self, query: str, top_k: int = 5, **kwargs):
-        db = self._load_local_vectorstore()
+    def query(self, query: str, filter=None, top_k: int = 5, storage_path: Optional[str] = None, **kwargs):
+        db = self._load_local_vectorstore(storage_path)
         if not db:
             return []
         docs = db.similarity_search(query, k=top_k)
         return docs
 
-    def clear(self, **kwargs):
-        db = self._load_local_vectorstore()
+    def query_with_filter(self, query: str, filter, top_k: int = 5, storage_path: Optional[str] = None, **kwargs):
+        db = self._load_local_vectorstore(storage_path)
+        if not db:
+            return []
+        results = db.similarity_search_with_score(query, filter=filter, k=top_k)
+        return results
+
+    def clear(self, storage_path: Optional[str] = None, **kwargs):
+        db = self._load_local_vectorstore(storage_path)
         if db:
             indexes = list(db.index_to_docstore_id.values())
             if len(indexes) > 0:
                 db.delete(indexes)
-                db.save_local(self.storage_path)
+                db.save_local(storage_path or self.storage_path)
 
     def _load_local_vectorstore(self, storage_path: Optional[str] = None):
         path = storage_path or self.storage_path

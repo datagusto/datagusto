@@ -49,6 +49,7 @@ To use OpenAI APIs:
 ```shell
 LLM_USAGE_TYPE = OPENAI
 OPENAI_KEY = xxxxxxx
+OPENAI_MODEL_NAME = xxxxxxx
 ```
 
 To use Azure OpenAI:
@@ -57,9 +58,15 @@ LLM_USAGE_TYPE = AZURE_OPENAI
 OPENAI_API_VERSION = xxxxxxx
 AZURE_OPENAI_ENDPOINT = xxxxxxx
 AZURE_OPENAI_API_KEY = xxxxxxx
+AZURE_OPENAI_MODEL_NAME = xxxxxxx
 ```
 
+In addition, you can set the following environment variables:
+- Which Vector storage to use: VECTOR_DB_USAGE_TYPE = `FAISS` | `WEAVIATE_SERVER` | `WEAVIATE_EMBEDDED`
+- Which database to use (save general information including data source, column info): DATABASE_USAGE = `POSTGRESQL` | `SQLITE3`
+
 **For Frontend:**
+
 Create a `.env` file by copying `frontend/.env.example` file.
 Then make sure `BACKEND_ENDPOINT` points to `backend` container.
 
@@ -68,11 +75,17 @@ BACKEND_ENDPOINT = http://backend:8000
 ```
 
 #### 3. Setup Docker Compose Services
-Run the below command to deploy the datagusto.
+We have 3 docker compose files:
+1. `docker-compose.yml`: main docker containers
+2. `docker-compose.test.yml`: test database server
+
+Based on your usage, please run following command to start system:
 
 ```shell
 cd path/to/datagusto
-docker-compose up -d
+
+# only main containers
+docker compose up -d
 ```
 
 This command will pull the necessary docker images and build datagusto's containers.
@@ -81,10 +94,12 @@ It will take about 5 min for the first time.
 You can confirm that all containers are running up with command `docker-compose ps`.
 
 ```shell
-$ docker-compose ps
-NAME                 IMAGE                COMMAND                  SERVICE             CREATED             STATUS                    PORTS
-datagusto-backend    datagusto-backend    "uvicorn main:app --…"   backend             39 minutes ago      Up 39 minutes             0.0.0.0:8000->8000/tcp
-datagusto-frontend   datagusto-frontend   "streamlit run main.…"   frontend            39 minutes ago      Up 39 minutes (healthy)   0.0.0.0:8501->8501/tcp
+$ docker compose ps
+CONTAINER ID   IMAGE                                             COMMAND                  CREATED         STATUS                            PORTS                                              NAMES
+64c058c7507e   datagusto-frontend                                "streamlit run main.…"   5 seconds ago   Up 3 seconds (health: starting)   0.0.0.0:8501->8501/tcp                             datagusto-frontend
+1a42bff396b9   datagusto-backend                                 "bash init.sh"           5 seconds ago   Up 4 seconds                      0.0.0.0:8000->8000/tcp                             datagusto-backend
+453705eabab3   postgres                                          "docker-entrypoint.s…"   5 seconds ago   Up 4 seconds                      0.0.0.0:5432->5432/tcp                             datagusto-postgres
+114d6b227a25   cr.weaviate.io/semitechnologies/weaviate:1.24.6   "/bin/weaviate --hos…"   5 seconds ago   Up 4 seconds                      0.0.0.0:8005->8005/tcp, 0.0.0.0:50056->50051/tcp   datagusto-weaviate
 ```
 
 In a few second, you should be able to access the datagusto UI at http://localhost:8501
@@ -102,8 +117,9 @@ TBA
 ### Deploy a test database to connect
 If you need a database to try datagusto, we offer a test database container. In the step **3. Setup Docker Compose Services**, run the below command instead of `docker-compose up -d`.
 
-```
-docker-compose -f docker-compose.yml -f docker-compose-mysql.yml up -d
+```shell
+# run system with test servers (mysql)
+docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
 ```
 
 ### Connecting to localhost DB server from Docker container

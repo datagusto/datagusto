@@ -1,18 +1,18 @@
+import os
 from typing import Optional
 
 from .llm_base import LLMBase
-from .llms import AzureOpenAILLM, OpenAIProxyLLM
-from settings import get_settings
+from .llms import AzureOpenAILLM, OpenAILLM
 
 llm: Optional[LLMBase] = None
 
-if get_settings().LLM_USAGE_TYPE == "AZURE_OPENAI":
+if os.environ["LLM_USAGE_TYPE"] == "AZURE_OPENAI":
     llm = AzureOpenAILLM()
 
-if get_settings().LLM_USAGE_TYPE == "OPENAI":
-    llm = OpenAIProxyLLM()
+if os.environ["LLM_USAGE_TYPE"] == "OPENAI":
+    llm = OpenAILLM()
 
-if get_settings().LLM_USAGE_TYPE == "CUSTOM_PROXY":
+if os.environ["LLM_USAGE_TYPE"] == "CUSTOM_PROXY":
     from .custom_proxy_llm import CustomProxyLLM
     llm = CustomProxyLLM()
 

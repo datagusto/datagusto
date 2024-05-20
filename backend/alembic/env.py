@@ -21,15 +21,16 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
+from database.models import *
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from models import Base
+from database.database import Base
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
+config.set_section_option("alembic", "DB_URL", os.environ["SQLALCHEMY_DATABASE_URI"])
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

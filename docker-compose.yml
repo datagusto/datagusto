@@ -12,10 +12,12 @@ services:
             DISK_USE_READONLY_PERCENTAGE: 97
         env_file:
             - ./backend/.env
+        depends_on:
+            - postgres
         networks:
             - app_net
         volumes:
-            - backend-data:/usr/src/app/db
+            - backend-data:/usr/src/app/db/
 
     frontend:
         build:
@@ -31,9 +33,56 @@ services:
         networks:
             - app_net
         volumes:
-            - frontend-data:/usr/src/app/db
+            - frontend-data:/app/db
+
+    postgres:
+        container_name: datagusto-postgres
+        image: postgres
+        environment:
+            POSTGRES_USER: 'postgres'
+            POSTGRES_PASSWORD: 'password'
+            PGDATA: /data/postgres
+        volumes:
+            - ./data/postgres/:/data/postgres
+        ports:
+            - "5432:5432"
+        restart: always
+        networks:
+            - app_net
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    weaviate:
+        command:
+            - --host
+            - 0.0.0.0
+            - --port
+            - '8005'
+            - --scheme
+            - http
+        image: cr.weaviate.io/semitechnologies/weaviate:1.24.6
+        container_name: datagusto-weaviate
+        ports:
+            - "8005:8005"
+            - "50056:50051"
+        volumes:
+            - weaviate-data:/var/lib/weaviate
+        networks:
+            - app_net
+        restart: on-failure:0
+        environment:
+            QUERY_DEFAULTS_LIMIT: 25
+            AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+            PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+            DEFAULT_VECTORIZER_MODULE: 'none'
+            ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
+            CLUSTER_HOSTNAME: 'node1'
 
 volumes:
+    weaviate-data:
     backend-data:
     frontend-data:
 

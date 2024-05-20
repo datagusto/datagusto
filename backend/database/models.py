@@ -2,13 +2,14 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, Enum, JSON
 
-from database import Base, DataSourceType
+from database.database import Base
+from adapters.types import DataSourceType
 
 
 class DataSource(Base):
     __tablename__ = 'data_source'
     id = Column('id', Integer, primary_key=True)
-    owner_id = Column('owner_id', Integer)
+    owner_id = Column('owner_id', String(50))
     name = Column('name', String(100))
     type = Column('type', Enum(DataSourceType))
     description = Column('description', String(1000))

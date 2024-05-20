@@ -26,6 +26,7 @@ cryptography = "*"
 pyvis = "*"
 sqlparse = "*"
 requests = "*"
+colorama = "*"
 
 [dev-packages]
 pandas-stubs = "*"

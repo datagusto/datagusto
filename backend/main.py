@@ -1,22 +1,28 @@
+import os
 from logging import getLogger
 import base64
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
+from services.vectordb.utils import generate_docs_from_columns
+
+load_dotenv(dotenv_path=".env")
+
+from database import crud
+from database import models
 import pandas as pd
 
-import crud
-import models
 import schemas
-from database import SessionLocal, engine
-from services.connections import get_connection
+from database.database import SessionLocal, engine
 from services.generative_llm import generate_column_description
 from services.metadata import get_metadata, save_metadata
-from services.vectordb.load import storage_client
+from services.vectordb.load import storage_client, storage_client_join
 from services.joinable_table.offline import indexing
 from services.joinable_table.online import join_data
-from adapters.mysql import MySQLConnection
+from adapters.connections import get_connection
 
 logger = getLogger("uvicorn.app")
 
@@ -24,6 +30,18 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:8080",
+    "*",   # Allow any origin for now
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -53,16 +71,12 @@ def get_user(data_source_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
     return data_source
 
+
 @app.get("/data_sources/{data_source_id}/table_name/{table_name}")
 def get_columns_in_table(data_source_id: int, table_name: str, db: Session = Depends(get_db)):
     data_source = crud.get_data_source(db, data_source_id=data_source_id)
 
-    # TODO: create getter for connection
-    connection = None
-    if data_source.type == schemas.DataSourceType.MySQL:
-        logger.debug("Creating MySQL connection: data_source_id=%s", data_source_id)
-        connection = MySQLConnection(config=data_source.connection)
-    
+    connection = get_connection(data_source)
     columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
     sample_data = connection.select_table(table_name, limit=5)
     df = pd.DataFrame(sample_data, columns=columns)
@@ -70,25 +84,24 @@ def get_columns_in_table(data_source_id: int, table_name: str, db: Session = Dep
     binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
     for column in binary_columns:
         df[column] = df[column].apply(encode_binary)
-    response = {}
-    response["data"] = df.to_json(orient="records")
+    response = {"data": df.to_json(orient="records")}
     return response
 
 
 @app.post("/data_sources/", response_model=schemas.DataSource)
-def create_data_source(ds: schemas.DataSourceCreate, db: Session = Depends(get_db)):
+def create_data_source(data_source: schemas.DataSourceCreate, db: Session = Depends(get_db)):
     # initialize connection based on the data source type
-    logger.info("Creating data source, and checking db connection info correct.: %s", ds.name)
-    connection = get_connection(ds.type, ds.connection)
+    logger.info("Creating data source, and checking db connection info correct.: %s", data_source.name)
+    connection = get_connection(data_source)
 
     # test connection with the credentials
-    logger.info("Testing connection with the credentials. %s", ds.name)
+    logger.info("Testing connection with the credentials. %s", data_source.name)
     if not connection.test_connection():
-        logger.exception("Invalid connection data. %s", ds.name)
+        logger.exception("Invalid connection data. %s", data_source.name)
         raise HTTPException(status_code=400, detail="Invalid connection data")
 
-    logger.info("Creating data source in the database. %s", ds.name)
-    data_source = crud.create_data_source(db=db, data_source=ds)
+    logger.info("Creating data source in the database. %s", data_source.name)
+    data_source = crud.create_data_source(db=db, data_source=data_source)
     return data_source
 
 
@@ -121,7 +134,8 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
                 "table_name": table_name,
                 "content": column["description"]
             } for column in columns])
-    storage_client.save(all_columns, database_name, data_source_id)
+    docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
+    storage_client.save(docs)
 
     # create joinable table index
     logger.info("Create joinable data index: %s", data_source_id)
@@ -162,12 +176,7 @@ def query_data_sources(query: str, db: Session = Depends(get_db)):
         table_name = r["table_name"]
         data_source = crud.get_data_source(db, data_source_id=data_source_id)
 
-        # TODO: create getter for connection
-        connection = None
-        if data_source.type == schemas.DataSourceType.MySQL:
-            logger.debug("Creating MySQL connection: data_source_id=%s", data_source_id)
-            connection = MySQLConnection(config=data_source.connection)
-        
+        connection = get_connection(data_source)
         columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
         sample_data = connection.select_table(table_name, limit=5)
         df = pd.DataFrame(sample_data, columns=columns)
@@ -187,9 +196,10 @@ def query_data_sources(query: str, db: Session = Depends(get_db)):
 def delete_vector_db(db: Session = Depends(get_db)):
     logger.info("Clearing VectorDB")
     storage_client.clear()
+    storage_client_join.clear()
     logger.info("Clearing Database")
     crud.clear_database_column_information(db)
-    return {"message": "VectorDB cleared."}
+    return {"message": "Database and VectorDB are cleared."}
 
 
 @app.post("/joinable_table/indexing/")
@@ -209,8 +219,15 @@ def post_joinable_table_join_data(body: schemas.JoinableTableJoinData, db: Sessi
     table_name = body.table_name
     merged_df, joinable_info = join_data(data_source_id, table_name, db)
 
-    response_body = {}
-    response_body["data"] = merged_df.to_json(orient="records")
-    response_body["joinable_info"] = joinable_info
-    
+    response_body = {"data": merged_df.to_json(orient="records"), "joinable_info": joinable_info}
+
     return response_body
+
+
+@app.exception_handler(Exception)
+def exception_handler(request, exc):
+    logger.exception(exc)
+    return {
+        "message": "Internal Server Error",
+        "detail": str(exc)
+    }, 200
