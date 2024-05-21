@@ -29,34 +29,37 @@ def indexing(data_source_id: int, db: Session):
     connection = get_connection(data_source)
 
     # create index
-    column_information = crud.get_columns_in_data_source(db, data_source_id)
+    database_information_list = crud.get_database_information(db, data_source_id)
     repository_texts = []
     docs = []
-    for column in column_information:
-        logger.info("data_source_id: %s, table_name: %s, column_name: %s, column_type: %s", data_source_id, column.table_name, column.column_name, column.column_info["column_type"])
-        # skip unsupported column types
-        # TODO: check with the white list of supported column types instead of black list
-        if column.column_info["column_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
-            continue
-        # select column data
-        data = connection.select_column(column.table_name, column.column_name, limit=1000)
-        data = flatten_concatenation(data)
-        logger.info("data: %s", data[:5])
-        # generate text
-        text = generate_text_from_data(column.table_name, column.column_name, data)
-        logger.info("text: %s", text[:50])
-        repository_texts.append(text)
+    for database_information in database_information_list:
+        for table_information in database_information.table_information:
+            for column in table_information.table_info["columns"]:
+                logger.info("data_source_id: %s, table_name: %s, column_name: %s, column_type: %s",
+                            data_source_id, table_information.table_name, column["column_name"], column["column_type"])
+                # skip unsupported column types
+                # TODO: check with the white list of supported column types instead of black list
+                if column["column_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
+                    continue
+                # select column data
+                data = connection.select_column(table_information.table_name, column["column_name"], limit=1000)
+                data = flatten_concatenation(data)
+                logger.info("data: %s", data[:5])
+                # generate text
+                text = generate_text_from_data(table_information.table_name, column["column_name"], data)
+                logger.info("text: %s", text[:50])
+                repository_texts.append(text)
 
-        docs.append(Document(
-            page_content=text,
-            metadata={
-                "data_source_id": data_source_id,
-                "database_name": data_source.name,
-                "table_name": column.table_name,
-                "column_name": column.column_name,
-                "column_type": column.column_info["column_type"]
-            })
-        )
+                docs.append(Document(
+                    page_content=text,
+                    metadata={
+                        "data_source_id": data_source_id,
+                        "database_name": data_source.name,
+                        "table_name": table_information.table_name,
+                        "column_name": column["column_name"],
+                        "column_type": column["column_type"]
+                    })
+                )
 
     # save index
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)

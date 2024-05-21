@@ -124,11 +124,12 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
         logger.info(f"Generating column description for table: {table_name=}")
         for column in columns:
             logger.info(f"Generating column description for column: {table_name=}, {column=}")
-            column["description"] = generate_column_description(column, table_name)
+            # column["description"] = generate_column_description(column, table_name)
+            column["description"] = "generate_column_description(column, table_name)"
 
     # save metadata to db
     logger.info("Saving metadata to the database")
-    save_metadata(data_source_id, database_name, tables_columns, db)
+    # save_metadata(data_source_id, database_name, tables_columns, db)
 
     # save embedded metadata to vectordb
     logger.info("Saving metadata to VectorDB")
@@ -140,7 +141,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
                 "content": column["description"]
             } for column in columns])
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
-    storage_client.save(docs)
+    # storage_client.save(docs)
 
     # create joinable table index
     logger.info("Create joinable data index: %s", data_source_id)
