@@ -82,7 +82,8 @@ def get_columns_in_table(data_source_id: int, table_name: str, db: Session = Dep
     data_source = crud.get_data_source(db, data_source_id=data_source_id)
 
     connection = get_connection(data_source)
-    columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
+    table_information = crud.get_table(db, data_source_id, table_name)
+    columns = [col["column_name"] for col in table_information.table_info.get("columns")]
     sample_data = connection.select_table(table_name, limit=5)
     df = pd.DataFrame(sample_data, columns=columns)
 
@@ -124,12 +125,11 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
         logger.info(f"Generating column description for table: {table_name=}")
         for column in columns:
             logger.info(f"Generating column description for column: {table_name=}, {column=}")
-            # column["description"] = generate_column_description(column, table_name)
-            column["description"] = "generate_column_description(column, table_name)"
+            column["description"] = generate_column_description(column, table_name)
 
     # save metadata to db
     logger.info("Saving metadata to the database")
-    # save_metadata(data_source_id, database_name, tables_columns, db)
+    save_metadata(data_source_id, database_name, tables_columns, db)
 
     # save embedded metadata to vectordb
     logger.info("Saving metadata to VectorDB")
@@ -141,7 +141,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
                 "content": column["description"]
             } for column in columns])
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
-    # storage_client.save(docs)
+    storage_client.save(docs)
 
     # create joinable table index
     logger.info("Create joinable data index: %s", data_source_id)
@@ -182,10 +182,16 @@ def query_data_sources(query: str, db: Session = Depends(get_db)):
         table_name = r["table_name"]
         data_source = crud.get_data_source(db, data_source_id=data_source_id)
 
-        connection = get_connection(data_source)
-        columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
-        sample_data = connection.select_table(table_name, limit=5)
-        df = pd.DataFrame(sample_data, columns=columns)
+        try:
+            connection = get_connection(data_source)
+            table_information = crud.get_table(db, data_source_id, table_name)
+            columns = [col["column_name"] for col in table_information.table_info.get("columns")]
+            sample_data = connection.select_table(table_name, limit=5)
+            df = pd.DataFrame(sample_data, columns=columns)
+        except Exception as e:
+            logger.error("Failed to get sample data for table: %s", table_name)
+            logger.exception(e)
+            continue
 
         binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
         for column in binary_columns:
@@ -204,7 +210,7 @@ def delete_vector_db(db: Session = Depends(get_db)):
     storage_client.clear()
     storage_client_join.clear()
     logger.info("Clearing Database")
-    crud.clear_database_column_information(db)
+    crud.clear_database_table_information(db)
     return {"message": "Database and VectorDB are cleared."}
 
 

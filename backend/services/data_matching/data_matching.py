@@ -153,7 +153,7 @@ def find_data_matching(target_df: pd.DataFrame, source_df: pd.DataFrame, matchin
         logger.debug("Processing target row: %s", target_index)
         retrieved_source_index_set = set()
         for target_key in matching:
-            query = target_row[target_key]
+            query = str(target_row[target_key])
             for source_key in matching[target_key]:
                 similar_records = db[source_key].similarity_search_with_score(query, k=10)
                 for r, score in similar_records:
