@@ -1,14 +1,17 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from . import models
 import schemas
 
 
-def get_user(db, username: str):
-    return db.query(models.User).filter(models.User.username == username).first()
+def get_user(db, username: str) -> Optional[schemas.User]:
+    user = db.query(models.User).filter(models.User.username == username).first()
+    return schemas.User(**user.__dict__) if user else None
 
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate) -> schemas.User:
     user_dict = user.dict()
     password = user_dict.pop('password')
     new_user = models.User(**user_dict)
@@ -19,12 +22,25 @@ def create_user(db: Session, user: schemas.UserCreate):
     return new_user
 
 
-def get_data_source(db: Session, data_source_id: int) -> schemas.DataSource:
-    return db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
+def get_data_source(db: Session, data_source_id: int, user_id: Optional[int]) -> schemas.DataSource:
+    if user_id:
+        data_source = db.query(models.DataSource).filter(
+            models.DataSource.id == data_source_id,
+            models.DataSource.owner_id == user_id
+        ).first()
+        return schemas.DataSource.from_orm(data_source) if data_source else None
+    data_source = db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
+    return schemas.DataSource.from_orm(data_source) if data_source else None
 
 
-def get_data_sources(db: Session, skip: int = 0, limit: int = 100) -> list[schemas.DataSource]:
-    return db.query(models.DataSource).offset(skip).limit(limit).all()
+def get_data_sources(db: Session, user_id: Optional[int], skip: int = 0, limit: int = 100) -> list[schemas.DataSource]:
+    if user_id:
+        data_sources = db.query(models.DataSource).filter(
+            models.DataSource.owner_id == user_id
+        ).offset(skip).limit(limit).all()
+        return [schemas.DataSource.from_orm(data_source) for data_source in data_sources]
+    data_sources = db.query(models.DataSource).offset(skip).limit(limit).all()
+    return [schemas.DataSource.from_orm(data_source) for data_source in data_sources]
 
 
 def create_data_source(db: Session, data_source: schemas.DataSourceCreate) -> schemas.DataSource:

@@ -17,6 +17,10 @@ class UserCreate(UserBase):
     password: str
 
 
+class UserLogin(UserBase):
+    password: str
+
+
 class User(UserBase):
     id: int
     password_hash: Optional[str] = None
@@ -32,7 +36,7 @@ class User(UserBase):
         return pwd_context.verify(password, self.password_hash)
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DataSourceBase(BaseModel):
@@ -54,7 +58,7 @@ class DataSource(DataSourceBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DataSourceGetMetadata(BaseModel):
@@ -77,7 +81,7 @@ class TableInformation(TableInformationBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DatabaseInformationBase(BaseModel):
@@ -94,7 +98,7 @@ class DatabaseInformation(DatabaseInformationBase):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DatabaseInformationCreate(DatabaseInformationBase):
