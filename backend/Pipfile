@@ -27,6 +27,9 @@ faiss-cpu = "*"
 psycopg2-binary = "*"
 transformers = "*"
 pandas = "*"
+passlib = "*"
+bcrypt = "*"
+python-jose = "*"
 
 [dev-packages]
 

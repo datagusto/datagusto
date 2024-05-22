@@ -14,13 +14,13 @@ from ..vectordb.load import storage_client_join
 logger = getLogger("uvicorn.app")
 
 
-def indexing(data_source_id: int, db: Session):
+def indexing(data_source_id: int, user_id: int, db: Session):
     # load tokenizer
     # model_path = "./models/model_ver1.0"
     # model, tokenizer = load_model(model_path)
 
     # get data from target data source
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         return HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
@@ -29,7 +29,7 @@ def indexing(data_source_id: int, db: Session):
     connection = get_connection(data_source)
 
     # create index
-    database_information_list = crud.get_database_information(db, data_source_id)
+    database_information_list = crud.get_database_information(db, data_source_id, user_id)
     repository_texts = []
     docs = []
     for database_information in database_information_list:
