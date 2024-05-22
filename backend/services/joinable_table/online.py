@@ -13,9 +13,9 @@ logger = getLogger("uvicorn.app")
 SCORE_THRESHOLD = 0.07
 
 
-def join_data(data_source_id: int, table_name: str, db: Session, threshold: float = SCORE_THRESHOLD):
+def join_data(data_source_id: int, user_id: int, table_name: str, db: Session, threshold: float = SCORE_THRESHOLD):
     # get data from target data source
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
@@ -24,7 +24,7 @@ def join_data(data_source_id: int, table_name: str, db: Session, threshold: floa
     connection = get_connection(data_source)
 
     # get columns in the data source
-    table_information = crud.get_table(db, data_source_id, table_name)
+    table_information = crud.get_table(db, data_source_id, table_name, user_id)
     joinable_columns = []
     for column in table_information.table_info["columns"]:
         logger.info("data_source_id: %s, table_name: %s, column_name: %s, column_type: %s",
@@ -84,10 +84,10 @@ def join_data(data_source_id: int, table_name: str, db: Session, threshold: floa
     merged_df = pd.DataFrame(source_data_data, columns=source_data_columns)
 
     for target_data_source_id in joinable_info:
-        target_data_source = crud.get_data_source(db, data_source_id=target_data_source_id)
+        target_data_source = crud.get_data_source(db, data_source_id=target_data_source_id, user_id=user_id)
         target_connection = get_connection(target_data_source)
         for target_table_name in joinable_info[target_data_source_id]:
-            target_table_information = crud.get_table(db, target_data_source_id, target_table_name)
+            target_table_information = crud.get_table(db, target_data_source_id, target_table_name, user_id)
             target_data_columns = [col["column_name"] for col in target_table_information.table_info.get("columns")]
             target_data_data = target_connection.select_table(target_table_name, limit=1000)
 

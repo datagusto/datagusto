@@ -67,11 +67,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
-@app.post("/user/", response_model=schemas.UserResponse)
+@app.post("/user/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     _user = crud.get_user(db, username=user.username)
     if _user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
     new_user = crud.create_user(db, user)
     return new_user
 
@@ -253,7 +253,7 @@ def post_joinable_table_join_data(body: schemas.JoinableTableJoinData, current_u
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name
-    merged_df, joinable_info = join_data(data_source_id, table_name, db)
+    merged_df, joinable_info = join_data(data_source_id, current_user.id, table_name, db)
 
     response_body = {"data": merged_df.to_json(orient="records"), "joinable_info": joinable_info}
 

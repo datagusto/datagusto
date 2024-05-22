@@ -5,12 +5,9 @@ from sqlalchemy.exc import SQLAlchemyError
 import json
 from urllib.parse import quote_plus
 
-from db import Session
-from auth import get_user_id
-from encrypt import encrypt_string
 import integration.connection as conn
+from auth import is_logged_in
 from models import DataSource, data_source_types
-
 
 
 def view_data_source_details(ds: DataSource):
@@ -26,6 +23,7 @@ def view_data_source_details(ds: DataSource):
 # - **Username:** `{ds.owner_id}`
 # - **Password:** `{'*' * len(ds.password)}`
 # """)
+
 
 def list_data_sources():
     with st.spinner():
@@ -92,7 +90,7 @@ def show_select_data_source_dropdown(data_source_id=""):
 
         if not data_source_id:
             # Create the selectbox (dropdown menu)
-            st.selectbox('Choose a Data Source:', options, index=data_source_option_selected_index, \
+            st.selectbox('Choose a Data Source:', options, index=data_source_option_selected_index,
                          key="data_source_option_selected", on_change=set_current_data_source_id)
      
         ds = data_sources[data_source_option_selected_index]
@@ -200,9 +198,7 @@ def get_default_port(db_type):
 
 
 def add_data_source_form(default_port, selected_db_type):
-    user_id = get_user_id()
-    
-    if not user_id:
+    if not is_logged_in():
         st.error("Looks like you are not logged in yet! Please log in first.")
         return
     
@@ -211,7 +207,7 @@ def add_data_source_form(default_port, selected_db_type):
         description = st.text_area("Description")
         # Use the selected_db_type and default_port from outside the form
         dtype = st.selectbox("Database Type", data_source_types, index=data_source_types.index(selected_db_type),
-                             disabled = True)
+                             disabled=True)
         hostname = st.text_input("Hostname")
         port = st.number_input("Port", value=default_port)  # Use the default port here
         database_name = st.text_input("Database Name")
@@ -250,7 +246,7 @@ def add_data_source_form(default_port, selected_db_type):
                     "password": password,
                     "database": database_name
                 }
-                result = conn.create_data_source(name, dtype, user_id, description, connection)
+                result = conn.create_data_source(name, dtype, description, connection)
                 status_code = result.pop("status_code", 200)
 
                 if status_code != 200:
@@ -265,7 +261,6 @@ def add_data_source_form(default_port, selected_db_type):
                 if status_code != 200:
                     st.error(f"Error adding data source:\n\n{result}")
 
-                
             if status_code == 200:
                 st.success("Data source added successfully!")
                 st.session_state.just_added_new_data_source = True
