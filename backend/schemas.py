@@ -21,6 +21,12 @@ class UserLogin(UserBase):
     password: str
 
 
+class UserResponse(UserBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class User(UserBase):
     id: int
     password_hash: Optional[str] = None
@@ -40,7 +46,6 @@ class User(UserBase):
 
 
 class DataSourceBase(BaseModel):
-    owner_id: int
     name: str
     type: DataSourceType
     description: Optional[str] = None
@@ -53,6 +58,7 @@ class DataSourceCreate(DataSourceBase):
 
 class DataSource(DataSourceBase):
     id: int
+    owner_id: int
     deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -76,6 +82,7 @@ class TableInformationCreate(TableInformationBase):
 
 class TableInformation(TableInformationBase):
     id: int
+    owner_id: int
     deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -92,6 +99,7 @@ class DatabaseInformationBase(BaseModel):
 
 class DatabaseInformation(DatabaseInformationBase):
     id: int
+    owner_id: int
     table_information: List[TableInformation] = []
     deleted_at: Optional[datetime] = None
     created_at: datetime

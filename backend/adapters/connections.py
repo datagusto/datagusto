@@ -25,7 +25,6 @@ def get_connection(data_source: Union[schemas.DataSourceBase, schemas.DataSource
             else:
                 logger.debug("Creating MySQL connection: data_source name=%s", data_source.name)
             connection = MySQLConnection(
-                owner_id=data_source.owner_id,
                 name=data_source.name,
                 description=data_source.description,
                 config=data_source.connection

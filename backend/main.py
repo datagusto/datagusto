@@ -67,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
-@app.post("/user/", response_model=schemas.User)
+@app.post("/user/", response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     _user = crud.get_user(db, username=user.username)
     if _user:
@@ -82,7 +82,7 @@ def login_for_access_token(user_login: schemas.UserLogin, db: Session = Depends(
     return generate_bearer_token(user.username)
 
 
-@app.get("/user/me")
+@app.get("/user/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
@@ -103,10 +103,10 @@ def get_data_source_by_id(data_source_id: int, current_user: schemas.User = Depe
 
 @app.get("/data_sources/{data_source_id}/table_name/{table_name}")
 def get_columns_in_table(data_source_id: int, table_name: str, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
 
     connection = get_connection(data_source)
-    table_information = crud.get_table(db, data_source_id, table_name)
+    table_information = crud.get_table(db, data_source_id, table_name, current_user.id)
     columns = [col["column_name"] for col in table_information.table_info.get("columns")]
     sample_data = connection.select_table(table_name, limit=5)
     df = pd.DataFrame(sample_data, columns=columns)
@@ -131,7 +131,7 @@ def create_data_source(data_source: schemas.DataSourceCreate, current_user: sche
         raise HTTPException(status_code=400, detail="Invalid connection data")
 
     logger.info("Creating data source in the database. %s", data_source.name)
-    data_source = crud.create_data_source(db=db, data_source=data_source)
+    data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
     return data_source
 
 
@@ -141,7 +141,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, current_user
 
     # get metadata to db
     logger.info("Getting metadata for data source: %s", data_source_id)
-    tables_columns, database_name = get_metadata(model.data_source_id, db)
+    tables_columns, database_name = get_metadata(model.data_source_id, current_user.id, db)
 
     # generate column description using LLM
     logger.info("Generating column description using LLM")
@@ -153,7 +153,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, current_user
 
     # save metadata to db
     logger.info("Saving metadata to the database")
-    save_metadata(data_source_id, database_name, tables_columns, db)
+    save_metadata(data_source_id, current_user.id, database_name, tables_columns, db)
 
     # save embedded metadata to vectordb
     logger.info("Saving metadata to VectorDB")
@@ -169,7 +169,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, current_user
 
     # create joinable table index
     logger.info("Create joinable data index: %s", data_source_id)
-    indexing(data_source_id, db)
+    indexing(data_source_id, current_user.id, db)
 
     return {"message": "Getting metadata completed."}
 
@@ -182,7 +182,7 @@ def query_data_sources(query: str, current_user: schemas.User = Depends(get_curr
     response_with_duplicated_tables = [
         {
             "data_source_id": r.metadata.get("data_source_id"),
-            "data_source_name": crud.get_data_source(db, r.metadata.get("data_source_id")).name,
+            "data_source_name": crud.get_data_source(db, r.metadata.get("data_source_id"), user_id=current_user.id).name,
             "database_name": r.metadata.get("database_name"),
             "table_name": r.metadata.get("table_name"),
             "column_description": [r.page_content]
@@ -204,11 +204,11 @@ def query_data_sources(query: str, current_user: schemas.User = Depends(get_curr
     for r in response:
         data_source_id = r["data_source_id"]
         table_name = r["table_name"]
-        data_source = crud.get_data_source(db, data_source_id=data_source_id)
+        data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
 
         try:
             connection = get_connection(data_source)
-            table_information = crud.get_table(db, data_source_id, table_name)
+            table_information = crud.get_table(db, data_source_id, table_name, current_user.id)
             columns = [col["column_name"] for col in table_information.table_info.get("columns")]
             sample_data = connection.select_table(table_name, limit=5)
             df = pd.DataFrame(sample_data, columns=columns)
@@ -243,7 +243,7 @@ def post_joinable_table_indexing(body: schemas.JoinableTableIndexingCreate, curr
     data_source_id = body.data_source_id
     logger.info("Indexing data source: %s", data_source_id)
 
-    indexing(data_source_id, db)
+    indexing(data_source_id, current_user.id, db)
 
     return {"message": "Joinable data index created."}
 
