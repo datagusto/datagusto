@@ -63,6 +63,15 @@ def encode_binary(value):
         return value
 
 
+@app.post("/user/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    _user = crud.get_user(db, username=user.username)
+    if _user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    new_user = crud.create_user(db, user)
+    return new_user
+
+
 @app.get("/data_sources/", response_model=list[schemas.DataSource])
 def get_data_sources(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     data_sources = crud.get_data_sources(db, skip=skip, limit=limit)

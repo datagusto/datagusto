@@ -4,6 +4,21 @@ from . import models
 import schemas
 
 
+def get_user(db, username: str):
+    return db.query(models.User).filter(models.User.username == username).first()
+
+
+def create_user(db: Session, user: schemas.UserCreate):
+    user_dict = user.dict()
+    password = user_dict.pop('password')
+    new_user = models.User(**user_dict)
+    new_user.password_hash = schemas.User.hash_password(password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
 def get_data_source(db: Session, data_source_id: int) -> schemas.DataSource:
     return db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
 
