@@ -28,22 +28,27 @@ def get_metadata(data_source_id: int, db: Session):
 
 
 def save_metadata(data_source_id: int, database_name: str, all_columns: dict, db: Session):
-    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id)
-
     # save to database
     logger.debug("Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
-    database_column_information = []
+    database_information = schemas.DatabaseInformationCreate(
+        data_source_id=data_source_id,
+        database_name=database_name,
+        schema_name=database_name
+    )
+    table_information = []
     for table_name, columns in all_columns.items():
-        database_column_information.extend([
-            schemas.DatabaseInformationCreate(
-                data_source_id=data_source_id,
-                database_name=database_name,
-                table_name=table_name,
-                column_name=column["column_name"],
-                column_info=column
-            ) for column in columns])
+        table_information.append(schemas.TableInformationCreate(
+            table_name=table_name,
+            table_info={
+                "database_name": database_name,
+                "schema_name": database_name,
+                "table_name": table_name,
+                "columns": columns
+            }
+        ))
+        # database_information.table_information.append(table_information)
 
     logger.debug("Saving database column information to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
-    crud.create_database_column_information_bulk(db, database_column_information)
+    crud.create_database_information(db, database_information, table_information)

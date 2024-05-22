@@ -18,11 +18,30 @@ class DataSourceCreate(DataSourceBase):
     pass
 
 
+class DataSource(DataSourceBase):
+    id: int
+    deleted_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
 class DataSourceGetMetadata(BaseModel):
     data_source_id: int
 
 
-class DataSource(DataSourceBase):
+class TableInformationBase(BaseModel):
+    table_name: str
+    table_info: dict
+
+
+class TableInformationCreate(TableInformationBase):
+    pass
+
+
+class TableInformation(TableInformationBase):
     id: int
     deleted_at: Optional[datetime] = None
     created_at: datetime
@@ -35,23 +54,23 @@ class DataSource(DataSourceBase):
 class DatabaseInformationBase(BaseModel):
     data_source_id: int
     database_name: str
-    table_name: str
-    column_name: str
-    column_info: dict
-
-
-class DatabaseInformationCreate(DatabaseInformationBase):
-    pass
+    schema_name: str
 
 
 class DatabaseInformation(DatabaseInformationBase):
     id: int
+    table_information: List[TableInformation] = []
     deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
+
+
+class DatabaseInformationCreate(DatabaseInformationBase):
+    table_information: List[TableInformationCreate] = []
+    pass
 
 
 class JoinableTableIndexingCreate(BaseModel):
@@ -61,6 +80,7 @@ class JoinableTableIndexingCreate(BaseModel):
 class JoinableTableJoinData(BaseModel):
     data_source_id: int
     table_name: str
+
 
 class SchemaMatchingResult(BaseModel):
     target_data_columns: List[str]
