@@ -14,6 +14,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
 
+HTTP_490_JWT_EXPIRED = 490
+
 
 def authenticate_user(db, username: str, password: str) -> Optional[schemas.User]:
     user = crud.get_user(db, username)
@@ -51,13 +53,18 @@ def verify_access_token(token: str, db) -> schemas.User:
         detail="Invalid token",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    expired_exception = HTTPException(
+        status_code=HTTP_490_JWT_EXPIRED,
+        detail="Token has expired",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
     except JWTError:
-        raise credentials_exception
+        raise expired_exception
     user = crud.get_user(db, username)
     if user is None:
         raise credentials_exception

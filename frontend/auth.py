@@ -1,19 +1,12 @@
 import streamlit as st
-import bcrypt
 
-from db import User, Session
+from integration.user import signup, login
 from navigation import Page, switch_page
 
 
 def is_logged_in():
-    return 'user' in st.session_state
+    return 'access_token' in st.session_state
 
-
-def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode('utf-8'), hashed)
 
 def handle_signup():
     username = st.session_state.signup_username
@@ -21,16 +14,16 @@ def handle_signup():
     if not username or not password:
         st.error('Username and password are required.')
         return
-    session = Session()
-    user = session.query(User).filter_by(username=username).first()
-    if user:
-        st.error('Username already exists.')
+
+    # send singup request to backend
+    response = signup(username, password)
+
+    if response['status_code'] != 201:
+        st.error(response.get('detail', 'Failed to sign up.'))
         return
-    hashed_password = hash_password(password)
-    new_user = User(username=username, password_hash=hashed_password)
-    session.add(new_user)
-    session.commit()
     st.success('Successfully signed up! You can now log in.')
+    return
+
 
 def handle_login():
     username = st.session_state.login_username
@@ -38,19 +31,22 @@ def handle_login():
     if not username or not password:
         st.error('Username and password are required.')
         return
-    session = Session()
-    user = session.query(User).filter_by(username=username).first()
-    if user and check_password(password, user.password_hash):
-        st.session_state['user'] = username
-        st.session_state['user_id'] = user.id
-        st.success(f'Welcome back, {username}!')
+
+    # send login request to backend
+    response = login(username, password)
+
+    if response['status_code'] != 200:
+        st.error(response.get('detail', 'Invalid username or password.'))
     else:
-        st.error('Invalid username or password.')
+        st.session_state['user'] = username
+        st.session_state['access_token'] = response.get('access_token')
+        st.success(f'Welcome back, {username}!')
+
 
 def handle_logout():
     if 'user' in st.session_state:
         del st.session_state['user']
-        del st.session_state['user_id']
+        del st.session_state['access_token']
     switch_page(Page.HOME)
 
 
@@ -80,10 +76,5 @@ def show_logout_page():
 
 def get_user_name():
     if 'user' in st.session_state:
-        return st.session_state.user
-    return None
-
-def get_user_id():
-    if 'user_id' in st.session_state:
-        return st.session_state.user_id
+        return st.session_state['user']
     return None
