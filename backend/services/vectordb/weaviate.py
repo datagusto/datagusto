@@ -67,7 +67,8 @@ class WeaviateDBBase(VectorDatabase):
         res = vectorstore.add_documents(docs)
         logger.debug(f"VectorDB log: Inserted {len(res)} documents to vectorstore")
 
-    def query(self, query: str, user_id: Optional[int], top_k: int = 5, **kwargs):
+    def query(self, query: str, user_id: Optional[int], filter=None,
+              top_k: int = 5, **kwargs):
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -76,11 +77,24 @@ class WeaviateDBBase(VectorDatabase):
             embedding=self.embeddings,
             attributes=self.attributes
         )
+        filter = self._add_user_id_to_filter(filter, user_id)
+        where_filter = {
+            "operator": "And",
+            "operands": [
+                {
+                    "path": [key],
+                    "operator": "Equal",
+                    "valueNumber" if isinstance(value, int) else "valueString": value
+                }
+                for key, value in filter.items()
+            ]
+        }
         query_embedded = self.embeddings.embed_query(query)
         # data = vectorstore.similarity_search(query, k=top_k)
         data = vectorstore.similarity_search_by_vector(
             embedding=query_embedded,
-            k=top_k
+            k=top_k,
+            where_filter=where_filter
         )
 
         # print results
