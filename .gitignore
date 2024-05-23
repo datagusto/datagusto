@@ -1,7 +1,8 @@
 *.pyc
 backend/__pycache__/*
-backend/db/*
-!backend/db/.gitkeep
+backend/data/*
+!backend/data/.gitkeep
+!backend/data/db/.gitkeep
 frontend/__pycache__/*
 .DS_Store
 .idea/*
@@ -9,7 +10,7 @@ frontend/__pycache__/*
 backend/models/*
 backend/.env
 backend/*.env
-data/
+/data/
 docker-volume/*
 /.env
 /.env.*

@@ -9,8 +9,8 @@ from .custom_embedding import CustomEmbedding
 from .vectordb import VectorDatabase
 
 # path need to be cross platform compatible (windows linux macos)
-# FAISS_PERSISTENT_STORAGE_PATH = "./db/faiss_data/index.faiss"
-FAISS_PERSISTENT_STORAGE_PATH = os.path.join(".", "db", "faiss_data", "index.faiss")
+# FAISS_PERSISTENT_STORAGE_PATH = "./data/db/faiss_data/index.faiss"
+FAISS_PERSISTENT_STORAGE_PATH = os.path.join(".", "data", "db", "faiss_data", "index.faiss")
 
 logger = getLogger("uvicorn.app")
 

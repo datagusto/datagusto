@@ -39,6 +39,7 @@ def save_metadata(data_source_id: int, user_id: int, database_name: str, all_col
     table_information = []
     for table_name, columns in all_columns.items():
         table_information.append(schemas.TableInformationCreate(
+            data_source_id=data_source_id,
             table_name=table_name,
             table_info={
                 "database_name": database_name,
@@ -47,7 +48,6 @@ def save_metadata(data_source_id: int, user_id: int, database_name: str, all_col
                 "columns": columns
             }
         ))
-        # database_information.table_information.append(table_information)
     database_information.table_information = table_information
 
     logger.debug("Saving database column information to the database. data_source_id=%s, database_name=%s",

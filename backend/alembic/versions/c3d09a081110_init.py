@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 7ea5a253fac2
+Revision ID: c3d09a081110
 Revises: 
-Create Date: 2024-05-22 16:04:24.816910
+Create Date: 2024-05-23 22:30:53.187828
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7ea5a253fac2'
+revision: str = 'c3d09a081110'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('owner_id', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=100), nullable=True),
-    sa.Column('type', sa.Enum('MySQL', 'PostgreSQL', name='datasourcetype'), nullable=True),
+    sa.Column('type', sa.Enum('MySQL', 'PostgreSQL', 'File', 'Sap', 'SpreadSheet', 'Snowflake', 'BigQuery', name='datasourcetype'), nullable=True),
     sa.Column('description', sa.String(length=1000), nullable=True),
     sa.Column('connection', sa.JSON(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
@@ -59,12 +59,14 @@ def upgrade() -> None:
     op.create_table('table_information',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('owner_id', sa.Integer(), nullable=True),
+    sa.Column('data_source_id', sa.Integer(), nullable=True),
     sa.Column('database_id', sa.Integer(), nullable=True),
     sa.Column('table_name', sa.String(length=100), nullable=True),
     sa.Column('table_info', sa.JSON(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['data_source_id'], ['data_source.id'], ),
     sa.ForeignKeyConstraint(['database_id'], ['database_information.id'], ),
     sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
