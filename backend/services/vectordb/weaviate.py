@@ -1,6 +1,6 @@
 import os
 from logging import getLogger
-from typing import Any
+from typing import Any, Optional
 
 import weaviate
 from langchain_community.vectorstores.weaviate import Weaviate
@@ -67,7 +67,7 @@ class WeaviateDBBase(VectorDatabase):
         res = vectorstore.add_documents(docs)
         logger.debug(f"VectorDB log: Inserted {len(res)} documents to vectorstore")
 
-    def query(self, query: str, top_k: int = 5, **kwargs):
+    def query(self, query: str, user_id: Optional[int], top_k: int = 5, **kwargs):
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -86,7 +86,7 @@ class WeaviateDBBase(VectorDatabase):
         # print results
         return data
 
-    def query_with_filter(self, query: str, filter, top_k: int = 5, **kwargs):
+    def query_with_score(self, query: str, user_id: Optional[int], filter, top_k: int = 5, **kwargs):
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -96,6 +96,7 @@ class WeaviateDBBase(VectorDatabase):
             attributes=self.attributes,
             by_text=False
         )
+        filter = self._add_user_id_to_filter(filter, user_id)
         where_filter = {
             "operator": "And",
             "operands": []

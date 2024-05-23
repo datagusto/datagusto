@@ -41,7 +41,7 @@ def join_data(data_source_id: int, user_id: int, table_name: str, db: Session, t
         query = generate_text_from_data(table_name, column["column_name"], data)
 
         filter = {"column_type": column["column_type"]}
-        result = storage_client_join.query_with_filter(query, filter, top_k=5)
+        result = storage_client_join.query_with_score(query, user_id, filter, top_k=5)
         for doc, score in result:
             metadata = doc.metadata
             if (metadata["data_source_id"] == data_source_id

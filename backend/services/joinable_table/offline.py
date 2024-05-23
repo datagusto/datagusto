@@ -54,6 +54,7 @@ def indexing(data_source_id: int, user_id: int, db: Session):
                     page_content=text,
                     metadata={
                         "data_source_id": data_source_id,
+                        "user_id": user_id,
                         "database_name": data_source.name,
                         "table_name": table_information.table_name,
                         "column_name": column["column_name"],

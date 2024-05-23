@@ -164,7 +164,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, current_user
                 "table_name": table_name,
                 "content": column["description"]
             } for column in columns])
-    docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
+    docs = generate_docs_from_columns(all_columns, database_name, data_source_id, current_user.id)
     storage_client.save(docs)
 
     # create joinable table index
@@ -176,7 +176,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, current_user
 
 @app.get("/metadata/query/")
 def query_data_sources(query: str, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    result = storage_client.query(query, top_k=10)
+    result = storage_client.query(query, user_id=current_user.id, top_k=10)
     logger.info(f"Search result for {query} is : {result}")
 
     response_with_duplicated_tables = [
