@@ -99,14 +99,15 @@ class WeaviateDBBase(VectorDatabase):
         filter = self._add_user_id_to_filter(filter, user_id)
         where_filter = {
             "operator": "And",
-            "operands": []
+            "operands": [
+                {
+                    "path": [key],
+                    "operator": "Equal",
+                    "valueNumber" if isinstance(value, int) else "valueString": value
+                }
+                for key, value in filter.items()
+            ]
         }
-        for key, value in filter.items():
-            where_filter["operands"].append({
-                "path": [key],
-                "operator": "Equal",
-                "valueString": value
-            })
         # where_filter = {"path": ["some_property"], "operator": "Equal", "valueString": "som_value"}
         data = vectorstore.similarity_search_with_score(
             query=query,

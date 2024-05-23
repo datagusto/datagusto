@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "be0488e0a2fbaab86a8333c92f905ed65879d77ff6cdb8081d593fb2275d97eb"
+            "sha256": "88eca8611e7fe04f1605c375dc527bfc68e04af8fa880a7ad43ea95009797da3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -833,6 +833,15 @@
             "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
             "version": "==0.2.0"
         },
+        "langchain-community": {
+            "hashes": [
+                "sha256:15c7e8f2547d9e9f03eef0704ef1c68a0074c462e9bd635662d5ea4b0eace87b",
+                "sha256:4d069d280fd2dc1219df13d580338729dbaebf581160bc42c73d5ed208258d57"
+            ],
+            "index": "pypi",
+            "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
+            "version": "==0.2.0"
+        },
         "langchain-core": {
             "hashes": [
                 "sha256:3521e1e573988c47399fca9739270c5d34f8ecec147253ad829eb9ff288f76d5",
@@ -860,11 +869,11 @@
         },
         "langsmith": {
             "hashes": [
-                "sha256:3c3520ea473de0a984237b3e9d638fdf23ef3acc5aec89a42e693225e72d6120",
-                "sha256:6a145b5454437f9e0f81525f23c4dcdbb8c07b1c91553b8f697456c418d6a599"
+                "sha256:3a9f112643f64d736b8c875390c750fe6485804ea53aeae4edebce0afa4383a5",
+                "sha256:7ef894c14e6d4175fce88ec3bcd5a9c8cf9a456ea77e26e361f519ad082f34a8"
             ],
             "markers": "python_version < '4.0' and python_full_version >= '3.8.1'",
-            "version": "==0.1.60"
+            "version": "==0.1.62"
         },
         "mako": {
             "hashes": [
@@ -2284,12 +2293,12 @@
         },
         "transformers": {
             "hashes": [
-                "sha256:5971737e7c2e4d5ae1495f9d48af0351c0fb7c7c650b96508ac5996cd7f44f49",
-                "sha256:edcbc48fc7ec26b23c86a7b17a516c0c882b289df0a260f61af6d9c11bfbc3f3"
+                "sha256:f0680e0b1a01067eccd11f62f0522409422c7d6f91d532fe0f50b136a406129d",
+                "sha256:fa859e4c66f0896633a3bf534e0d9a29a9a88478a49f94c5d8270537dc61cc42"
             ],
             "index": "pypi",
             "markers": "python_full_version >= '3.8.0'",
-            "version": "==4.41.0"
+            "version": "==4.41.1"
         },
         "typer": {
             "hashes": [

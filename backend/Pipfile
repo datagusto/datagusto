@@ -30,6 +30,7 @@ pandas = "*"
 passlib = "*"
 bcrypt = "*"
 python-jose = "*"
+langchain-community = "*"
 
 [dev-packages]
 
