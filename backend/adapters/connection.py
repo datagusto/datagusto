@@ -16,6 +16,10 @@ class Connection(ABC):
         valid = self.validate_config()
         if not valid:
             raise ValueError("Invalid config data.")
+        self.post_init()
+
+    def post_init(self):
+        pass
 
     @abstractmethod
     def validate_config(self) -> bool:

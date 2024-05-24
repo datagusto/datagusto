@@ -6,6 +6,11 @@ from pydantic import BaseModel
 class DataSourceType(enum.Enum):
     MySQL = "mysql"
     PostgreSQL = "postgresql"
+    File = "file"
+    Sap = "sap"
+    SpreadSheet = "spreadsheet"
+    Snowflake = "snowflake"
+    BigQuery = "bigquery"
 
 
 class MySQLConfig(BaseModel):
@@ -30,3 +35,8 @@ class PostgreSQLConfig(BaseModel):
     @property
     def host_port(self):
         return f"{self.host}:{self.port}"
+
+
+class FileConfig(BaseModel):
+    file_type: str
+    saved_name: str

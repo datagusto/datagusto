@@ -86,13 +86,13 @@ def clear_database_table_information(db: Session):
 def get_table(db: Session, data_source_id: int, table_name: str, user_id: Optional[int]) -> Optional[schemas.TableInformation]:
     if user_id:
         table = db.query(models.TableInformation).filter(
-            models.TableInformation.database_id == data_source_id,
+            models.TableInformation.data_source_id == data_source_id,
             models.TableInformation.table_name == table_name,
             models.TableInformation.owner_id == user_id
         ).first()
         return schemas.TableInformation.from_orm(table) if table else None
     table = db.query(models.TableInformation).filter(
-        models.TableInformation.database_id == data_source_id,
+        models.TableInformation.data_source_id == data_source_id,
         models.TableInformation.table_name == table_name
     ).first()
     return schemas.TableInformation.from_orm(table) if table else None

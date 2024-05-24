@@ -47,6 +47,7 @@ class TableInformation(Base):
     __tablename__ = 'table_information'
     id = Column('id', Integer, primary_key=True)
     owner_id = Column('owner_id', Integer, ForeignKey('user.id'))
+    data_source_id = Column('data_source_id', Integer, ForeignKey('data_source.id'))
     database_id = Column('database_id', Integer, ForeignKey('database_information.id'))
     database_information = relationship('DatabaseInformation', back_populates='table_information')
     table_name = Column('table_name', String(100))

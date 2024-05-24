@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from .common import get_request, post_request, post_request_with_files
 
@@ -31,6 +32,32 @@ def create_data_source(
     response = post_request(path, payload)
     response_dict = response.json()
     response_dict["status_code"] = response.status_code
+    return response_dict
+
+
+def create_data_source_as_file(
+        name: str,
+        type: str,
+        description: str,
+        connection: dict,
+        file: Any,
+        file_type: str
+):
+    path = "data_sources/file/"
+
+    files = {
+        "file": (file.name, file, "text/csv"),
+    }
+    payload = {"detail": json.dumps({
+        "name": name,
+        "type": type,
+        "description": description,
+        "file_type": file_type,
+    })}
+    response = post_request_with_files(path, files, payload)
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+
     return response_dict
 
 

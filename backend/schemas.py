@@ -72,6 +72,7 @@ class DataSourceGetMetadata(BaseModel):
 
 
 class TableInformationBase(BaseModel):
+    data_source_id: int
     table_name: str
     table_info: dict
 
@@ -83,6 +84,7 @@ class TableInformationCreate(TableInformationBase):
 class TableInformation(TableInformationBase):
     id: int
     owner_id: int
+    database_id: int
     deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
