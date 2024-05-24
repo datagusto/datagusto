@@ -17,6 +17,9 @@ FILE_STORAGE_PATH = os.path.join(".", "data", "files")
 class FileConnection(Connection):
     file_type: str
 
+    def post_init(self):
+        self.file_type = self.config.get("file_type")
+
     def validate_config(self) -> bool:
         # validate the config by initializing the MySQLConfig pydantic class
         try:

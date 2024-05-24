@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 
-data_source_types = ["mysql"]
+data_source_types = ["mysql", "file"]
 
 class DataSource:
     def __init__(self, owner_id, name, dtype, description, hostname, port, username, password, database_name,\
