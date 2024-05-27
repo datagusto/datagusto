@@ -32,6 +32,7 @@ colorama = "*"
 pandas-stubs = "*"
 sqlalchemy-stubs = "*"
 types-requests = "*"
+watchdog = "*"
 
 [requires]
 python_version = "3.9"

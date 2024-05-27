@@ -1,4 +1,4 @@
-./db/*
+./data/*
 !./db/.gitkeep
 ./.idea/
 __pycache__/

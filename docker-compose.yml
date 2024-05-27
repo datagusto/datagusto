@@ -17,7 +17,7 @@ services:
         networks:
             - app_net
         volumes:
-            - backend-data:/usr/src/app/db/
+            - backend-data:/usr/src/app/data
 
     frontend:
         build:

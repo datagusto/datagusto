@@ -8,10 +8,7 @@ logger = getLogger("uvicorn.app")
 
 
 def flatten_concatenation(matrix):
-    flat_list = []
-    for row in matrix:
-        flat_list += row
-    return flat_list
+    return [element for row in matrix for element in (row if isinstance(row, tuple) else [row])]
 
 
 def load_model(model_path):

@@ -1,9 +1,9 @@
 version: '3.3'
 
 services:
-    mysql:
+    mysql-test:
         image: mysql:5.7
-        container_name: datagusto-mysql
+        container_name: datagusto-mysql-test
         restart: always
         platform: linux/amd64
         environment:
@@ -13,10 +13,26 @@ services:
             MYSQL_ROOT_PASSWORD: 'password'
             TZ: "Asia/Tokyo"
         ports:
-            - '3306:3306'
+            - '13306:3306'
         volumes:
             - ./config/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
             - ./config/mysql/init:/docker-entrypoint-initdb.d
-            - ./data/mysql/:/var/lib/mysql
+            - ./data/test/mysql/:/var/lib/mysql
+        networks:
+            - app_net
+
+    postgres-test:
+        container_name: datagusto-postgres-test
+        image: postgres
+        environment:
+            POSTGRES_USER: 'postgres'
+            POSTGRES_PASSWORD: 'password'
+            PGDATA: /data/postgres
+        volumes:
+            - ./data/test/postgres/:/data/postgres
+            - ./config/postgres/:/docker-entrypoint-initdb.d
+        ports:
+            - "15432:5432"
+        restart: always
         networks:
             - app_net

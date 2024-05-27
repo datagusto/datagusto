@@ -1,9 +1,7 @@
 import json
-import os
-import requests
-from typing import Optional
+from typing import Any
 
-BACKEND_ENDPOINT = os.environ["BACKEND_ENDPOINT"]
+from .common import get_request, post_request, post_request_with_files
 
 
 def get_data_source(data_source_id: int):
@@ -21,7 +19,6 @@ def get_data_sources():
 def create_data_source(
         name: str,
         type: str,
-        owner_id: int,
         description: str,
         connection: dict
 ):
@@ -29,13 +26,38 @@ def create_data_source(
     payload = {
         "name": name,
         "type": type,
-        "owner_id": owner_id,
         "description": description,
         "connection": connection
     }
     response = post_request(path, payload)
     response_dict = response.json()
     response_dict["status_code"] = response.status_code
+    return response_dict
+
+
+def create_data_source_as_file(
+        name: str,
+        type: str,
+        description: str,
+        connection: dict,
+        file: Any,
+        file_type: str
+):
+    path = "data_sources/file/"
+
+    files = {
+        "file": (file.name, file, "text/csv"),
+    }
+    payload = {"detail": json.dumps({
+        "name": name,
+        "type": type,
+        "description": description,
+        "file_type": file_type,
+    })}
+    response = post_request_with_files(path, files, payload)
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+
     return response_dict
 
 
@@ -61,37 +83,7 @@ def query_metadata(query: str):
         response_dict = {}
         response_dict["text"] = response.text
         response_dict["status_code"] = response.status_code
-        return response_dict        
-
-
-def get_request(path: str, params=None, timeout=1200):
-    if params is None:
-        params = {}
-    url = f"{BACKEND_ENDPOINT}/{path}"
-    response = requests.request(
-        method="GET",
-        url=url,
-        params=params,
-        timeout=timeout
-    )
-    print(response)
-    return response
-
-
-def post_request(path: str, payload: dict, timeout=1200):
-    url = f"{BACKEND_ENDPOINT}/{path}"
-    response = requests.request(
-        method="POST",
-        url=url,
-        headers={
-            'Content-Type': 'application/json'
-        },
-        timeout=timeout,
-        data=json.dumps(payload)
-    )
-    print(response)
-    print(response.text)
-    return response
+        return response_dict
 
 
 def join_data(data_source_id, table_name):
@@ -120,14 +112,7 @@ def post_find_schema_matching(target_file, source_file):
         "target_file": (target_file.name, target_file, "text/csv"),
         "source_file": (source_file.name, source_file, "text/csv")
     }
-    url = f"{BACKEND_ENDPOINT}/{path}"
-    response = requests.request(
-        method="POST",
-        url=url,
-        timeout=3600,
-        files=files
-    )
-    
+    response = post_request_with_files(path, files)
     response_dict = response.json()
     response_dict["status_code"] = response.status_code
     
@@ -136,16 +121,11 @@ def post_find_schema_matching(target_file, source_file):
 
 def post_find_data_matching(target_file, source_file, matching):
     path = "find_data_matching/"
-    files = [
-        ("target_file", (target_file.name, target_file, "text/csv")),
-        ("source_file", (source_file.name, source_file, "text/csv"))
-    ]
+    files = {
+        "target_file": (target_file.name, target_file, "text/csv"),
+        "source_file": (source_file.name, source_file, "text/csv")
+    }
     payload = {"matching": json.dumps(matching)}
+    response = post_request_with_files(path, files, payload)
 
-    url = f"{BACKEND_ENDPOINT}/{path}"
-    response = requests.post(
-        url=url,
-        files=files,
-        data=payload,
-    )
     return response

@@ -5,8 +5,10 @@ from typing import Union
 from fastapi import HTTPException
 
 import schemas
-from adapters.mysql import MySQLConnection
-from adapters.types import DataSourceType
+from .file import FileConnection
+from .mysql import MySQLConnection
+from .postgres import PostgreSQLConnection
+from .types import DataSourceType
 
 
 logger = getLogger("uvicorn.app")
@@ -19,13 +21,26 @@ def get_connection(data_source: Union[schemas.DataSourceBase, schemas.DataSource
 
     connection = None
     try:
+        message = f"Creating {{DATA_SOURCE}} connection: data_source name={data_source.name}"
+        if isinstance(data_source, schemas.DataSource):
+            message = f"Creating {{DATA_SOURCE}} connection: data_source id={data_source.id}"
         if data_source.type == DataSourceType.MySQL:
-            if isinstance(data_source, schemas.DataSource):
-                logger.debug("Creating MySQL connection: data_source id=%s", data_source.id)
-            else:
-                logger.debug("Creating MySQL connection: data_source name=%s", data_source.name)
+            logger.debug(message.format(DATA_SOURCE="MySQL"))
             connection = MySQLConnection(
-                owner_id=data_source.owner_id,
+                name=data_source.name,
+                description=data_source.description,
+                config=data_source.connection
+            )
+        if data_source.type == DataSourceType.File:
+            logger.debug(message.format(DATA_SOURCE="File"))
+            connection = FileConnection(
+                name=data_source.name,
+                description=data_source.description,
+                config=data_source.connection
+            )
+        if data_source.type == DataSourceType.PostgreSQL:
+            logger.debug(message.format(DATA_SOURCE="PostgreSQL"))
+            connection = PostgreSQLConnection(
                 name=data_source.name,
                 description=data_source.description,
                 config=data_source.connection

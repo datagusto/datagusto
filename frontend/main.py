@@ -2,13 +2,14 @@ import streamlit as st
 from dotenv import load_dotenv
 import os
 
-from db import init_db
+load_dotenv()
+
 from auth import show_auth_page, is_logged_in, get_user_name
 
-load_dotenv()
 
 def init_page():
     pass
+
 
 def main():
     # Initialize page
@@ -18,16 +19,12 @@ def main():
         st.session_state.file_name = file_name
         init_page()
 
-    # Initialize the database
-    if not 'db_initialized' in st.session_state:
-        init_db()
-        st.session_state.db_initialized = True
-    
     if not is_logged_in():
         show_auth_page()
     else:
         st.header("Home")
         st.write(f"Hi! You are logged in as {get_user_name()}")
+
 
 if __name__ == '__main__':
     main()

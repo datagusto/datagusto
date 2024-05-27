@@ -1,25 +1,25 @@
-import os
+import uuid
 from logging import getLogger
 import base64
 from io import StringIO
-from typing import List
 import json
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, Request, Form
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from services.vectordb.utils import generate_docs_from_columns
-
 load_dotenv(dotenv_path=".env")
 
+from adapters.types import FileConfig
 from database import crud
 from database import models
 import pandas as pd
 
 import schemas
+from core.auth import authenticate_user, generate_bearer_token, oauth2_scheme, verify_access_token
+from services.vectordb.utils import generate_docs_from_columns
 from database.database import SessionLocal, engine
 from services.generative_llm import generate_column_description
 from services.metadata import get_metadata, save_metadata
@@ -37,7 +37,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:8080",
-    "*",   # Allow any origin for now
+    "*",  # Allow any origin for now
 ]
 
 app.add_middleware(
@@ -47,6 +47,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 def get_db():
     db = SessionLocal()
@@ -63,26 +64,55 @@ def encode_binary(value):
         return value
 
 
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> schemas.User:
+    user = verify_access_token(token, db)
+    return user
+
+
+@app.post("/user/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    _user = crud.get_user(db, username=user.username)
+    if _user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
+    new_user = crud.create_user(db, user)
+    return new_user
+
+
+@app.post("/user/login", response_model=dict)
+def login_for_access_token(user_login: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = authenticate_user(db, user_login.username, user_login.password)
+    return generate_bearer_token(user.username)
+
+
+@app.get("/user/me", response_model=schemas.UserResponse)
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
+    return current_user
+
+
 @app.get("/data_sources/", response_model=list[schemas.DataSource])
-def get_data_sources(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    data_sources = crud.get_data_sources(db, skip=skip, limit=limit)
+def get_data_sources(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(get_current_user),
+                     db: Session = Depends(get_db)):
+    data_sources = crud.get_data_sources(db, skip=skip, limit=limit, user_id=current_user.id)
     return data_sources
 
 
 @app.get("/data_sources/{data_source_id}", response_model=schemas.DataSource)
-def get_user(data_source_id: int, db: Session = Depends(get_db)):
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+def get_data_source_by_id(data_source_id: int, current_user: schemas.User = Depends(get_current_user),
+                          db: Session = Depends(get_db)):
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
     if not data_source:
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
     return data_source
 
 
 @app.get("/data_sources/{data_source_id}/table_name/{table_name}")
-def get_columns_in_table(data_source_id: int, table_name: str, db: Session = Depends(get_db)):
-    data_source = crud.get_data_source(db, data_source_id=data_source_id)
+def get_columns_in_table(data_source_id: int, table_name: str, current_user: schemas.User = Depends(get_current_user),
+                         db: Session = Depends(get_db)):
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
 
     connection = get_connection(data_source)
-    columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
+    table_information = crud.get_table(db, data_source_id, table_name, current_user.id)
+    columns = [col["column_name"] for col in table_information.table_info.get("columns")]
     sample_data = connection.select_table(table_name, limit=5)
     df = pd.DataFrame(sample_data, columns=columns)
 
@@ -94,7 +124,8 @@ def get_columns_in_table(data_source_id: int, table_name: str, db: Session = Dep
 
 
 @app.post("/data_sources/", response_model=schemas.DataSource)
-def create_data_source(data_source: schemas.DataSourceCreate, db: Session = Depends(get_db)):
+def create_data_source(data_source: schemas.DataSourceCreate, current_user: schemas.User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
     # initialize connection based on the data source type
     logger.info("Creating data source, and checking db connection info correct.: %s", data_source.name)
     connection = get_connection(data_source)
@@ -106,17 +137,43 @@ def create_data_source(data_source: schemas.DataSourceCreate, db: Session = Depe
         raise HTTPException(status_code=400, detail="Invalid connection data")
 
     logger.info("Creating data source in the database. %s", data_source.name)
-    data_source = crud.create_data_source(db=db, data_source=data_source)
+    data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
+    return data_source
+
+
+@app.post("/data_sources/file/", response_model=schemas.DataSource)
+def create_data_source_from_file(detail: str = Form(...), file: UploadFile = File(...),
+                                 current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logger.info("Creating data source from file: %s", file.filename)
+    detail_dict = json.loads(detail)
+    file_type = detail_dict.get("file_type")
+    if file_type not in ["csv"]:
+        raise HTTPException(status_code=400, detail="Only CSV or TSV files are supported")
+
+    connection = FileConfig(
+        file_type=detail_dict.get("file_type"),
+        saved_name=f"{uuid.uuid4().hex}.{file_type}"
+    )
+
+    data_source = schemas.DataSourceCreate(**detail_dict, connection=connection.dict())
+    connection = get_connection(data_source)
+
+    # save file to the storage
+    logger.info("Saving file to the storage: %s", file.filename)
+    connection.save_file(file.file)
+
+    data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
     return data_source
 
 
 @app.post("/metadata/")
-def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session = Depends(get_db)):
+def get_metadata_data_sources(model: schemas.DataSourceGetMetadata,
+                              current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     data_source_id = model.data_source_id
 
     # get metadata to db
     logger.info("Getting metadata for data source: %s", data_source_id)
-    tables_columns, database_name = get_metadata(model.data_source_id, db)
+    tables_columns, database_name = get_metadata(model.data_source_id, current_user.id, db)
 
     # generate column description using LLM
     logger.info("Generating column description using LLM")
@@ -128,7 +185,7 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
 
     # save metadata to db
     logger.info("Saving metadata to the database")
-    save_metadata(data_source_id, database_name, tables_columns, db)
+    save_metadata(data_source_id, current_user.id, database_name, tables_columns, db)
 
     # save embedded metadata to vectordb
     logger.info("Saving metadata to VectorDB")
@@ -136,28 +193,29 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata, db: Session 
     for table_name, columns in tables_columns.items():
         all_columns.extend([
             {
-                "table_name": table_name,
-                "content": column["description"]
-            } for column in columns])
-    docs = generate_docs_from_columns(all_columns, database_name, data_source_id)
+                "table_name": table_name
+            } | column for column in columns])
+    docs = generate_docs_from_columns(all_columns, database_name, data_source_id, current_user.id)
     storage_client.save(docs)
 
     # create joinable table index
     logger.info("Create joinable data index: %s", data_source_id)
-    indexing(data_source_id, db)
+    indexing(data_source_id, current_user.id, db)
 
     return {"message": "Getting metadata completed."}
 
 
 @app.get("/metadata/query/")
-def query_data_sources(query: str, db: Session = Depends(get_db)):
-    result = storage_client.query(query, top_k=10)
+def query_data_sources(query: str, current_user: schemas.User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    result = storage_client.query(query, user_id=current_user.id, top_k=10)
     logger.info(f"Search result for {query} is : {result}")
 
     response_with_duplicated_tables = [
         {
             "data_source_id": r.metadata.get("data_source_id"),
-            "data_source_name": crud.get_data_source(db, r.metadata.get("data_source_id")).name,
+            "data_source_name": crud.get_data_source(db, r.metadata.get("data_source_id"),
+                                                     user_id=current_user.id).name,
             "database_name": r.metadata.get("database_name"),
             "table_name": r.metadata.get("table_name"),
             "column_description": [r.page_content]
@@ -179,12 +237,18 @@ def query_data_sources(query: str, db: Session = Depends(get_db)):
     for r in response:
         data_source_id = r["data_source_id"]
         table_name = r["table_name"]
-        data_source = crud.get_data_source(db, data_source_id=data_source_id)
+        data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
 
-        connection = get_connection(data_source)
-        columns = [c.column_name for c in crud.get_columns_in_table(db, data_source_id, table_name)]
-        sample_data = connection.select_table(table_name, limit=5)
-        df = pd.DataFrame(sample_data, columns=columns)
+        try:
+            connection = get_connection(data_source)
+            table_information = crud.get_table(db, data_source_id, table_name, current_user.id)
+            columns = [col["column_name"] for col in table_information.table_info.get("columns")]
+            sample_data = connection.select_table(table_name, limit=5)
+            df = pd.DataFrame(sample_data, columns=columns)
+        except Exception as e:
+            logger.error("Failed to get sample data for table: %s", table_name)
+            logger.exception(e)
+            continue
 
         binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
         for column in binary_columns:
@@ -198,31 +262,34 @@ def query_data_sources(query: str, db: Session = Depends(get_db)):
 
 
 @app.delete("/metadata/")
-def delete_vector_db(db: Session = Depends(get_db)):
+def delete_vector_db(current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info("Clearing VectorDB")
     storage_client.clear()
     storage_client_join.clear()
     logger.info("Clearing Database")
-    crud.clear_database_column_information(db)
+    crud.clear_database_table_information(db)
     return {"message": "Database and VectorDB are cleared."}
 
 
 @app.post("/joinable_table/indexing/")
-def post_joinable_table_indexing(body: schemas.JoinableTableIndexingCreate, db: Session = Depends(get_db)):
+def post_joinable_table_indexing(body: schemas.JoinableTableIndexingCreate,
+                                 current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     data_source_id = body.data_source_id
     logger.info("Indexing data source: %s", data_source_id)
 
-    indexing(data_source_id, db)
+    indexing(data_source_id, current_user.id, db)
 
     return {"message": "Joinable data index created."}
 
 
 @app.post("/joinable_table/join_data/")
-def post_joinable_table_join_data(body: schemas.JoinableTableJoinData, db: Session = Depends(get_db)):
+def post_joinable_table_join_data(body: schemas.JoinableTableJoinData,
+                                  current_user: schemas.User = Depends(get_current_user),
+                                  db: Session = Depends(get_db)):
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name
-    merged_df, joinable_info = join_data(data_source_id, table_name, db)
+    merged_df, joinable_info = join_data(data_source_id, current_user.id, table_name, db)
 
     response_body = {"data": merged_df.to_json(orient="records"), "joinable_info": joinable_info}
 
@@ -239,7 +306,8 @@ def exception_handler(request, exc):
 
 
 @app.post("/find_schema_matching/", response_model=schemas.SchemaMatchingResult)
-def post_find_schema_matching(target_file: UploadFile = File(...), source_file: UploadFile = File(...)) -> dict:
+def post_find_schema_matching(target_file: UploadFile = File(...), source_file: UploadFile = File(...),
+                              current_user: schemas.User = Depends(get_current_user)) -> dict:
     target_df = pd.read_csv(target_file.file)
     target_name = target_file.filename
     source_df = pd.read_csv(source_file.file)
@@ -265,7 +333,9 @@ def post_find_schema_matching(target_file: UploadFile = File(...), source_file: 
 
 
 @app.post("/find_data_matching/")
-def post_find_data_matching(matching: str = Form(...), target_file: UploadFile = File(...), source_file: UploadFile = File(...)):
+def post_find_data_matching(matching: str = Form(...), target_file: UploadFile = File(...),
+                            source_file: UploadFile = File(...),
+                            current_user: schemas.User = Depends(get_current_user)):
     matching_dict = json.loads(matching)
 
     target_df = pd.read_csv(target_file.file)
@@ -281,7 +351,7 @@ def post_find_data_matching(matching: str = Form(...), target_file: UploadFile =
         if col_tmp in merged_df.columns:
             col_tmp = col_tmp + "_source"
         merged_df[col_tmp] = merged_df["__source_index"].map(source_df[col])
-    
+
     merged_df = merged_df.drop(columns=pair_columns, axis=1)
 
     # DataFrameをCSV形式に変換

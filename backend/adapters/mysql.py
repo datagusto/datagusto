@@ -100,17 +100,18 @@ class MySQLConnection(Connection):
                 all_columns.setdefault(table, []).append(column_info)
         self.close()
         return all_columns
-    
+
+    def execute_query(self, query: str):
+        self.set_cursor()
+        self.cursor.execute(query)
+        data = self.cursor.fetchall()
+        self.close()
+        return data
+
     def select_column(self, table: str, column: str, limit: int = 1000):
-        self.set_cursor()
-        self.cursor.execute(f"SELECT `{column}` FROM {table} LIMIT {limit}")
-        data = self.cursor.fetchall()
-        self.close()
-        return data
-    
+        query = f"SELECT `{column}` FROM {table} LIMIT {limit}"
+        return self.execute_query(query)
+
     def select_table(self, table: str, limit: int = 1000):
-        self.set_cursor()
-        self.cursor.execute(f"SELECT * FROM {table} LIMIT {limit}")
-        data = self.cursor.fetchall()
-        self.close()
-        return data
+        query = f"SELECT * FROM {table} LIMIT {limit}"
+        return self.execute_query(query)

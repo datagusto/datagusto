@@ -11,9 +11,9 @@ from database import crud
 logger = getLogger("uvicorn.app")
 
 
-def get_metadata(data_source_id: int, db: Session):
+def get_metadata(data_source_id: int, user_id: int, db: Session):
     logger.debug("Starting to get metadata from data source: data_source_id=%s", data_source_id)
-    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id)
+    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
@@ -27,23 +27,29 @@ def get_metadata(data_source_id: int, db: Session):
     return all_columns, connection.get_database_name()
 
 
-def save_metadata(data_source_id: int, database_name: str, all_columns: dict, db: Session):
-    data_source: schemas.DataSource = crud.get_data_source(db, data_source_id=data_source_id)
-
+def save_metadata(data_source_id: int, user_id: int, database_name: str, all_columns: dict, db: Session):
     # save to database
     logger.debug("Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
-    database_column_information = []
+    database_information = schemas.DatabaseInformationCreate(
+        data_source_id=data_source_id,
+        database_name=database_name,
+        schema_name=database_name
+    )
+    table_information = []
     for table_name, columns in all_columns.items():
-        database_column_information.extend([
-            schemas.DatabaseInformationCreate(
-                data_source_id=data_source_id,
-                database_name=database_name,
-                table_name=table_name,
-                column_name=column["column_name"],
-                column_info=column
-            ) for column in columns])
+        table_information.append(schemas.TableInformationCreate(
+            data_source_id=data_source_id,
+            table_name=table_name,
+            table_info={
+                "database_name": database_name,
+                "schema_name": database_name,
+                "table_name": table_name,
+                "columns": columns
+            }
+        ))
+    database_information.table_information = table_information
 
     logger.debug("Saving database column information to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
-    crud.create_database_column_information_bulk(db, database_column_information)
+    crud.create_database_information(db, database_information, user_id)

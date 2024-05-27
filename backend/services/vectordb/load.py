@@ -25,7 +25,7 @@ if os.environ["VECTOR_DB_USAGE_TYPE"] in ["WEAVIATE_SERVER", "WEAVIATE_EMBEDDED"
         storage_client_join = WeaviateEmbedDB(class_name=WEAVIATE_CLASS_NAME_JOIN)
 
 if os.environ["VECTOR_DB_USAGE_TYPE"] == "FAISS":
-    JOIN_DATA_PERSISTENT_STORAGE_PATH = os.path.join(".", "db", "faiss_data", "joinable_table.faiss")
+    JOIN_DATA_PERSISTENT_STORAGE_PATH = os.path.join(".", "data", "db", "faiss_data", "joinable_table.faiss")
 
     storage_client = FaissDB()
     storage_client_join = FaissDB(storage_path=JOIN_DATA_PERSISTENT_STORAGE_PATH)
