@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ class DataSourceType(enum.Enum):
 
 class MySQLConfig(BaseModel):
     host: str
-    port: int = 3306
+    port: int
     username: str
     password: str
     database: str
@@ -27,10 +28,11 @@ class MySQLConfig(BaseModel):
 
 class PostgreSQLConfig(BaseModel):
     host: str
-    port: int = 5432
+    port: int
     user: str
     password: str
-    database: str = "postgres"
+    dbname: str
+    schema: Optional[str]
 
     @property
     def host_port(self):

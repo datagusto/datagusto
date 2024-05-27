@@ -12,7 +12,7 @@ def generate_docs_from_columns(all_columns: list[dict], database_name: str, data
     # generate Documents object with necessary metadata
     logger.debug("VectorDB log: Generating Documents object with necessary metadata")
     documents = [Document(
-        page_content=x.get("content"),
+        page_content=x.get("description"),
         metadata={
             "data_source_id": data_source_id,
             "user_id": user_id,
