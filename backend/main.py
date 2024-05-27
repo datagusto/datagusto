@@ -193,9 +193,8 @@ def get_metadata_data_sources(model: schemas.DataSourceGetMetadata,
     for table_name, columns in tables_columns.items():
         all_columns.extend([
             {
-                "table_name": table_name,
-                "content": column["description"]
-            } for column in columns])
+                "table_name": table_name
+            } | column for column in columns])
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id, current_user.id)
     storage_client.save(docs)
 

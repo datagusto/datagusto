@@ -5,9 +5,10 @@ from typing import Union
 from fastapi import HTTPException
 
 import schemas
-from adapters.file import FileConnection
-from adapters.mysql import MySQLConnection
-from adapters.types import DataSourceType
+from .file import FileConnection
+from .mysql import MySQLConnection
+from .postgres import PostgreSQLConnection
+from .types import DataSourceType
 
 
 logger = getLogger("uvicorn.app")
@@ -33,6 +34,13 @@ def get_connection(data_source: Union[schemas.DataSourceBase, schemas.DataSource
         if data_source.type == DataSourceType.File:
             logger.debug(message.format(DATA_SOURCE="File"))
             connection = FileConnection(
+                name=data_source.name,
+                description=data_source.description,
+                config=data_source.connection
+            )
+        if data_source.type == DataSourceType.PostgreSQL:
+            logger.debug(message.format(DATA_SOURCE="PostgreSQL"))
+            connection = PostgreSQLConnection(
                 name=data_source.name,
                 description=data_source.description,
                 config=data_source.connection
