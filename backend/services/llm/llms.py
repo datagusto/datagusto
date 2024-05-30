@@ -2,6 +2,7 @@ import os
 import re
 from typing import Optional, Any
 
+import torch
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -35,23 +36,34 @@ class OpenAILLM(LLMBase):
 class LocalLLM(LLMBase):
     tokenizer: Any
     token: str
+    device: str
 
     def __init__(self, model_name: str = None, temperature: float = 0.1):
         model_name = model_name or os.getenv("HUGGING_FACE_MODEL_NAME", "microsoft/Phi-3-mini-4k-instruct")
         super().__init__(model_name, temperature)
 
+        self.device = os.getenv("USE_GPU", "cpu")
         self.token = os.getenv("HUGGING_FACE_ACCESS_TOKEN")
-
         self.tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=model_name,
             trust_remote_code=True,
             token=self.token
         )
-        self.llm = AutoModelForCausalLM.from_pretrained(
-            pretrained_model_name_or_path=model_name,
-            trust_remote_code=True,
-            token=self.token
-        )
+
+        if self.device == "mps":
+            torch.set_default_device("mps")
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                pretrained_model_name_or_path=model_name,
+                trust_remote_code=True,
+                device_map="auto",
+                token=self.token
+            )
+        else:
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                pretrained_model_name_or_path=model_name,
+                trust_remote_code=True,
+                token=self.token
+            )
 
     def completion(
             self,
@@ -59,7 +71,10 @@ class LocalLLM(LLMBase):
             max_token: int = 100,
             **kwargs,
     ) -> str:
-        model_inputs = self.tokenizer([prompt], return_tensors="pt")
+        if self.device == "mps":
+            model_inputs = self.tokenizer([prompt], return_tensors="pt").to("mps")
+        else:
+            model_inputs = self.tokenizer([prompt], return_tensors="pt")
         generated_ids = self.llm.generate(**model_inputs, max_new_tokens=max_token)
         result = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         response = self.remove_prompt_from_response(prompt, result[0])
