@@ -11,6 +11,7 @@ python-dotenv = "*"
 streamlit-pydantic = "*"
 pydantic = "*"
 fastapi = "*"
+uvloop = {version = "*", markers = "sys_platform == 'linux' or sys_platform == 'linux2' or sys_platform == 'darwin'"}
 uvicorn = "*"
 extra-streamlit-components = "*"
 sqlalchemy = "*"

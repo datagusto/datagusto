@@ -1,12 +1,15 @@
 import os
 import re
-from typing import Optional, Any
+from logging import getLogger
+from typing import Any
 
 import torch
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from .llm_base import LLMBase
+
+logger = getLogger("uvicorn.app")
 
 
 class AzureOpenAILLM(LLMBase):
@@ -56,28 +59,32 @@ class LocalLLM(LLMBase):
                 pretrained_model_name_or_path=model_name,
                 trust_remote_code=True,
                 device_map="auto",
+                low_cpu_mem_usage=True,
                 token=self.token
             )
+            logger.debug("Using Apple M1 GPU...")
         else:
             self.llm = AutoModelForCausalLM.from_pretrained(
                 pretrained_model_name_or_path=model_name,
                 trust_remote_code=True,
+                low_cpu_mem_usage=True,
                 token=self.token
             )
+            logger.debug("Using CPU...")
+        logger.debug("Loaded model: %s", model_name)
 
-    def completion(
-            self,
-            prompt: str,
-            max_token: int = 100,
-            **kwargs,
-    ) -> str:
+    def completion(self, prompt: str, max_token: int = 100, **kwargs) -> str:
         if self.device == "mps":
             model_inputs = self.tokenizer([prompt], return_tensors="pt").to("mps")
         else:
             model_inputs = self.tokenizer([prompt], return_tensors="pt")
         generated_ids = self.llm.generate(**model_inputs, max_new_tokens=max_token)
         result = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-        response = self.remove_prompt_from_response(prompt, result[0])
+        try:
+            response = self.remove_prompt_from_response(prompt, result[0])
+        except Exception as e:
+            logger.exception("Error removing prompt from response.")
+            response = result[0]
         return response
 
     def remove_prompt_from_response(self, prompt: str, response: str) -> str:
@@ -93,7 +100,6 @@ class LocalLLM(LLMBase):
         """
         # Escape any special characters in the prompt to prevent regex issues
         escaped_prompt = re.escape(prompt)
-
         # Use regex to remove the prompt from the start of the response
         clean_response = re.sub(f'^{escaped_prompt}', '', response).strip()
 
