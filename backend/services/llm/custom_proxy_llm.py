@@ -17,7 +17,7 @@ class CustomProxyLLM(LLMBase):
     embed_url: str = None
     generation_url: str = None
 
-    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1):
+    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1, **kwargs):
         super().__init__(model_name, temperature)
         self.token = os.environ["CUSTOM_PROXY_TOKEN"]
         self.embed_url = os.environ["CUSTOM_PROXY_EMBED_URL"]
