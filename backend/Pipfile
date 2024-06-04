@@ -8,8 +8,14 @@ url = "https://download.pytorch.org/whl"
 verify_ssl = true
 name = "pytorch"
 
+[[source]]
+url = "https://download.pytorch.org/whl"
+verify_ssl = true
+name = "pytorch-nightly"
+
 [packages]
 fastapi = "*"
+uvloop = {version = "*", markers = "sys_platform == 'linux' or sys_platform == 'linux2' or sys_platform == 'darwin'"}
 uvicorn = "*"
 sqlalchemy = "*"
 alembic = "*"
@@ -31,6 +37,8 @@ passlib = "*"
 bcrypt = "*"
 python-jose = "*"
 langchain-community = "*"
+accelerate = "*"
+sentencepiece = "*"
 
 [dev-packages]
 
