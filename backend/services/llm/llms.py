@@ -14,6 +14,7 @@ logger = getLogger("uvicorn.app")
 
 class AzureOpenAILLM(LLMBase):
     def __init__(self, model_name: str = None, temperature: float = 0.1, **kwargs):
+        logger.debug("Initializing Azure OpenAI LLM...")
         model_name = model_name or os.getenv("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo")
         super().__init__(model_name, temperature)
 

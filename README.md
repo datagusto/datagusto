@@ -150,6 +150,20 @@ TBA
 
 ## Remarks
 
+### Running on CUDA
+Because of the `pipenv` restriction ([here](https://github.com/pypa/pipenv/issues/3702)), you need to install following way:
+```shell
+# go to backend folder
+cd backend
+# delete Pipfile.lock
+rm Pipfile.lock
+
+# install with CUDA 12
+pipenv install --categories="torch_cu121 packages"
+# install with CUDA 11
+pipenv install --categories="torch_cu118 packages"
+```
+
 ### Running LLM locally
 
 Running LLM locally generally requires a lot of resources (cpu, gpu, memory) especially for large models.

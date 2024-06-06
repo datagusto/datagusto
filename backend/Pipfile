@@ -6,12 +6,22 @@ name = "pypi"
 [[source]]
 url = "https://download.pytorch.org/whl"
 verify_ssl = true
-name = "pytorch"
+name = "torch"
 
 [[source]]
-url = "https://download.pytorch.org/whl"
+url = "https://download.pytorch.org/whl/cpu/"
 verify_ssl = true
-name = "pytorch-nightly"
+name = "torch_cpu"
+
+[[source]]
+url = "https://download.pytorch.org/whl/cu121"
+verify_ssl = true
+name = "torch_cu12.1"
+
+[[source]]
+url = "https://download.pytorch.org/whl/cu118"
+verify_ssl = true
+name = "torch_cu11.8"
 
 [packages]
 fastapi = "*"
@@ -21,9 +31,7 @@ sqlalchemy = "*"
 alembic = "*"
 pyyaml = "*"
 mysql-connector-python = "*"
-torch = {version = "2.2.2", index = "pytorch"}
 langchain = "*"
-sentence-transformers = "*"
 weaviate-client = "*"
 langchain-openai = "*"
 pytz = "*"
@@ -37,10 +45,26 @@ passlib = "*"
 bcrypt = "*"
 python-jose = "*"
 langchain-community = "*"
-accelerate = "*"
 sentencepiece = "*"
 
 [dev-packages]
+
+[torch_cu118]
+accelerate = "*"
+sentence-transformers = "*"
+torch = {version = "2.2.2", index = "torch_cu11.8"}
+flash-attn = "*"
+
+[torch_cu121]
+accelerate = "*"
+sentence-transformers = "*"
+torch = {version = "2.2.2", index = "torch_cu12.1"}
+flash-attn = "*"
+
+[torch]
+accelerate = "*"
+sentence-transformers = "*"
+torch = {version = "2.2.2", index = "torch"}
 
 [requires]
 python_version = "3.9"
