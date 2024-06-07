@@ -66,5 +66,10 @@ accelerate = "*"
 sentence-transformers = "*"
 torch = {version = "2.2.2", index = "torch"}
 
+[torch_mps]
+accelerate = "*"
+sentence-transformers = "*"
+torch = {index = "torch"}
+
 [requires]
 python_version = "3.9"
