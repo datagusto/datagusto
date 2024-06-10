@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+from .azureai_endpoint import AzureAIEndpoint
 from .llm_base import LLMBase
 from .llms import AzureOpenAILLM, OpenAILLM, LocalLLM
 
@@ -14,6 +15,9 @@ if os.environ["LLM_USAGE_TYPE"] == "OPENAI":
 
 if os.environ["LLM_USAGE_TYPE"] == "LOCAL":
     llm = LocalLLM()
+
+if os.environ["LLM_USAGE_TYPE"] == "AZUREAI_ENDPOINT":
+    llm = AzureAIEndpoint()
 
 if os.environ["LLM_USAGE_TYPE"] == "CUSTOM_PROXY":
     from .custom_proxy_llm import CustomProxyLLM

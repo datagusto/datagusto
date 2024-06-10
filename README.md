@@ -48,19 +48,12 @@ Then replace necessary values with your own.
 Set what processing unit to use for embedding and generation:
 
 ```
-USE_GPU = "cpu"
+USE_GPU = "cpu" | "mps" | "cuda"
 ```
 
-If you want to use Apple Silicon GPU, set `USE_GPU = "mps"`.
-
-In order to use Apple Silicon GPU for locally running LLM model, install following programs:
-
-```shell
-# install RUST
-$ curl — proto ‘=https’ — tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Then restart your terminal.
+- `cpu`: Use CPU for embedding and generation
+- `mps`: Use Apple Silicon MPS for embedding and generation
+- `cuda`: Use GPU for embedding and generation
 
 ##### 2.1.b LLM Usage
 
@@ -150,38 +143,63 @@ TBA
 
 ## Remarks
 
+### Running on CUDA
+
+Because of the `pipenv` restriction ([here](https://github.com/pypa/pipenv/issues/3702)), you need to install following
+way:
+
+```shell
+# go to backend folder
+cd backend
+# delete Pipfile.lock
+rm Pipfile.lock
+
+# install with CUDA 12
+pipenv install --categories="torch_cu121 packages"
+# install with CUDA 11
+pipenv install --categories="torch_cu118 packages"
+```
+
+### Running on Apple Silicon MPS
+
+In order to use Apple Silicon GPU for locally running LLM model, install following programs, and restart your terminal.:
+
+```shell
+# install RUST
+$ curl — proto ‘=https’ — tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Because torch version 2.2.2 is failing to run on Apple Silicon MPS, you need to install torch version 2.3:
+
+```shell
+# go to backend folder
+cd backend
+# delete Pipfile.lock
+rm Pipfile.lock
+
+# install with torch 2.3
+pipenv install --categories="torch_mps packages"
+```
+
 ### Running LLM locally
 
 Running LLM locally generally requires a lot of resources (cpu, gpu, memory) especially for large models.
 We have conducted some experiments with some popular open source LLM models:
 
-| Model Name                         | Model size | Required memory | 1 request response time | Response value | |
-|------------------------------------|------------|-----------------|-------------------------|----------------|-|
-| microsoft/phi-1_5                  | 1.3b       | 8GB             | 20 sec                  | Bad            | |
-| microsoft/Phi-3-mini-4k-instruct   | 3.8b       | 16GB            | 20 sec                  | Good           | |
-| mistralai/Mistral-7B-v0.1          | 7b         | 30GB            | 100 sec                 | Good           | |
-| openai-community/gpt2              | 124M       | 1.6GB           | 3 sec                   | Bad            | |
-| mistralai/Mistral-7B-Instruct-v0.3 | 7b         | 30GB            | 31 sec                  | Good           | |
-| bofenghuang/vigogne-2-7b-chat      | 7b         | 27GB            | 31 sec                  | Good           | |
-| google/gemma-2b-it                 | 2b         | 12GB            | 20 sec                  | Good           | |
-| google/gemma-1.1-2b-it             | 2b         | 11GB            | 10 sec                  | Good           | |
+| Model Name                         | Model size | Support language | Response value |
+|------------------------------------|------------|------------------|----------------|
+| microsoft/Phi-3-mini-4k-instruct   | 3.8b       | English          | Good           |
+| mistralai/Mistral-7B-v0.1          | 7b         | English          | Good           |
+| mistralai/Mistral-7B-Instruct-v0.3 | 7b         | English          | Good           |
+| bofenghuang/vigogne-2-7b-chat      | 7b         | English          | Good           |
+| google/gemma-2b-it                 | 2b         | English          | Good           |
+| google/gemma-1.1-2b-it             | 2b         | English          | Good           |
+| Rakuten/RakutenAI-7B-instruct      | 7b         | English+Japanese | Good           |
 
 Response is validated by sending table and column information to LLM and check if it can generate meaningful
 description for the column.
-Please use appropriate model based on your system resources and generation accuracy.
 
-Experiment has done on:
-
-| Name                  | Description                                | |
-|-----------------------|--------------------------------------------|-|
-| Server                | Virtual Machine On Azure                   | |
-| VM size               | Standard E8bds v5 (8 vcpus, 64 GiB memory) | |
-| Processing archicture | only CPU                                   | |
-| Operating System      | Ubuntu 20.02 LTS                           | |
-| Python version        | 3.9.14                                     | |
-
-Multilanguage test and GPU test will be conducted in the future.
-- Response time was about half the size of CPU on Apple Silicon GPU for `google/gemma-2b-it` and `google/gemma-1.1-2b-it`.
+Multilanguage test will be conducted in the future.
 
 ### Deploy a test database to connect
 

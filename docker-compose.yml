@@ -17,7 +17,8 @@ services:
         networks:
             - app_net
         volumes:
-            - backend-data:/usr/src/app/data
+            - backend-data-db:/usr/src/app/data/db
+            - backend-data-files:/usr/src/app/data/files
 
     frontend:
         build:
@@ -83,7 +84,8 @@ services:
 
 volumes:
     weaviate-data:
-    backend-data:
+    backend-data-db:
+    backend-data-files:
     frontend-data:
 
 networks:

@@ -16,7 +16,7 @@ RUN pip install --upgrade setuptools
 RUN pip install pipenv
 
 COPY ./Pipfile* ./
-RUN pipenv install --system --deploy --ignore-pipfile
+RUN pipenv install --system --deploy --categories="packages torch" --ignore-pipfile
 
 # Copy source code
 COPY ./ ./
