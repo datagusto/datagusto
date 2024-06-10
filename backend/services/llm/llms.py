@@ -14,6 +14,7 @@ logger = getLogger("uvicorn.app")
 
 class AzureOpenAILLM(LLMBase):
     def __init__(self, model_name: str = None, temperature: float = 0.1, **kwargs):
+        logger.debug("Initializing Azure OpenAI LLM...")
         model_name = model_name or os.getenv("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo")
         super().__init__(model_name, temperature)
 
@@ -53,7 +54,17 @@ class LocalLLM(LLMBase):
             token=self.token
         )
 
-        if self.device == "mps":
+        if self.device == "cuda":
+            torch.set_default_device("cuda")
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                pretrained_model_name_or_path=model_name,
+                trust_remote_code=True,
+                device_map="auto",
+                low_cpu_mem_usage=True,
+                token=self.token
+            )
+            logger.debug("Using GPU...")
+        elif self.device == "mps":
             torch.set_default_device("mps")
             self.llm = AutoModelForCausalLM.from_pretrained(
                 pretrained_model_name_or_path=model_name,
@@ -74,7 +85,9 @@ class LocalLLM(LLMBase):
         logger.debug("Loaded model: %s", model_name)
 
     def completion(self, prompt: str, max_token: int = 100, **kwargs) -> str:
-        if self.device == "mps":
+        if self.device == "cuda":
+            model_inputs = self.tokenizer([prompt], return_tensors="pt").to("cuda")
+        elif self.device == "mps":
             model_inputs = self.tokenizer([prompt], return_tensors="pt").to("mps")
         else:
             model_inputs = self.tokenizer([prompt], return_tensors="pt")
