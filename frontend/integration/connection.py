@@ -112,7 +112,8 @@ def post_find_schema_matching(target_file, source_file):
         "target_file": (target_file.name, target_file, "text/csv"),
         "source_file": (source_file.name, source_file, "text/csv")
     }
-    response = post_request_with_files(path, files)
+    # processing might take a while, so increase the timeout to 5 hours
+    response = post_request_with_files(path, files, timeout=18000)
     response_dict = response.json()
     response_dict["status_code"] = response.status_code
     
@@ -126,6 +127,7 @@ def post_find_data_matching(target_file, source_file, matching):
         "source_file": (source_file.name, source_file, "text/csv")
     }
     payload = {"matching": json.dumps(matching)}
-    response = post_request_with_files(path, files, payload)
+    # processing might take a while, so increase the timeout to 5 hours
+    response = post_request_with_files(path, files, payload, timeout=18000)
 
     return response
