@@ -25,3 +25,6 @@ def generate_column_description(column_info: dict, table_name) -> str:
     res = llm.completion(_full_prompt)
     return res
 
+
+def query_llm(prompt: str) -> str:
+    return llm.completion(prompt)

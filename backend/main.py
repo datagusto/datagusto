@@ -21,7 +21,7 @@ import schemas
 from core.auth import authenticate_user, generate_bearer_token, oauth2_scheme, verify_access_token
 from services.vectordb.utils import generate_docs_from_columns
 from database.database import SessionLocal, engine
-from services.generative_llm import generate_column_description
+from services.generative_llm import generate_column_description, query_llm
 from services.metadata import get_metadata, save_metadata
 from services.vectordb.load import storage_client, storage_client_join
 from services.joinable_table.offline import indexing
@@ -363,3 +363,9 @@ def post_find_data_matching(matching: str = Form(...), target_file: UploadFile =
     response = StreamingResponse(iter([buffer.getvalue()]), media_type="text/csv")
     response.headers["Content-Disposition"] = "attachment; filename=data.csv"
     return response
+
+
+@app.post("/llm/query")
+def post_llm_query(body: schemas.QueryRequest, current_user: schemas.User = Depends(get_current_user)):
+    query = body.query
+    return query_llm(query)

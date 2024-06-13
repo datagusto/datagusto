@@ -131,3 +131,7 @@ class SchemaMatchingResult(BaseModel):
     source_data_columns: List[str]
     source_data_matched_columns: List[str]
     matching: dict
+
+
+class QueryRequest(BaseModel):
+    query: str
