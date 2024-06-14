@@ -196,7 +196,7 @@ def generate_erd_for_data_source(data_source_id: int, current_user: schemas.User
             logger.info("Generating ERD for table: %s", table_name)
             logger.info("Table information: %s", table_info)
         erds.append(erd.generate_code())
-    return erds
+    return {"erds": erds}
 
 
 @app.post("/metadata/")

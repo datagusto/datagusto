@@ -131,3 +131,11 @@ def post_find_data_matching(target_file, source_file, matching):
     response = post_request_with_files(path, files, payload, timeout=18000)
 
     return response
+
+
+def post_generate_erd(data_source_id):
+    path = f"data_sources/{data_source_id}/erd/"
+    response = post_request(path, {})
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+    return response_dict
