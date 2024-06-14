@@ -1,3 +1,4 @@
+import re
 import uuid
 from logging import getLogger
 import base64
@@ -9,6 +10,8 @@ from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, Form, sta
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+
+from core.mermaid import MermaidERD
 
 load_dotenv(dotenv_path=".env")
 
@@ -164,6 +167,36 @@ def create_data_source_from_file(detail: str = Form(...), file: UploadFile = Fil
 
     data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
     return data_source
+
+
+@app.post("/data_sources/{data_source_id}/erd/")
+def generate_erd_for_data_source(data_source_id: int, current_user: schemas.User = Depends(get_current_user),
+                                 db: Session = Depends(get_db)):
+    logger.debug("Generating ERD for data source: %s", data_source_id)
+    database_information_list = crud.get_database_information(db, data_source_id, current_user.id)
+    erds = []
+    for database_information in database_information_list:
+        logger.info("Generating ERD for database: %s", database_information.database_name)
+        erd = MermaidERD(title=database_information.database_name)
+        for table_information in database_information.table_information:
+            logger.info("Generating ERD for table: %s", table_information.table_name)
+            table_name = table_information.table_name
+            table_info = table_information.table_info
+            columns = table_info.get("columns")
+            columns_attributes = []
+            for column in columns:
+                column_name = column.get("column_name")
+                # replace all white spaces with bar because mermaid does not support white spaces
+                column_type = re.sub(r'\s+', '-', column['column_type'])
+                columns_attributes.append(f"{column_name} {column_type}")
+                if "referenced_table_name" in column:
+                    erd.add_relationship(table_name, column["referenced_table_name"], "contains")
+            erd.add_entity(table_name, columns_attributes)
+
+            logger.info("Generating ERD for table: %s", table_name)
+            logger.info("Table information: %s", table_info)
+        erds.append(erd.generate_code())
+    return erds
 
 
 @app.post("/metadata/")
