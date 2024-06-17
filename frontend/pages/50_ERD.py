@@ -39,7 +39,7 @@ def mermaid(code: str) -> None:
             mermaid.initialize({{ startOnLoad: true }});
         </script>
         """,
-        height=500,
+        height=800,
     )
 
 if __name__ == '__main__':
