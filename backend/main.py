@@ -187,8 +187,7 @@ def generate_erd_for_data_source(data_source_id: int, current_user: schemas.User
             for column in columns:
                 column_name = column.get("column_name")
                 # replace all white spaces with bar because mermaid does not support white spaces
-                column_type = re.sub(r'\s+', '-', column['column_type'])
-                columns_attributes.append(f"{column_name} {column_type}")
+                columns_attributes.append({"column_name": column_name, "column_type": column['column_type']})
                 if "referenced_table_name" in column:
                     erd.add_relationship(table_name, column["referenced_table_name"], "contains")
             erd.add_entity(table_name, columns_attributes)

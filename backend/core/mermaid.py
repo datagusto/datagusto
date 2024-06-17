@@ -1,12 +1,30 @@
+import re
+
+
 class MermaidERD:
     def __init__(self, title="Entity Relationship Diagram"):
         self.title = title
         self.entities = []
         self.relationships = []
 
-    def add_entity(self, entity_name, attributes):
-        attr_str = "\n  ".join(attributes)
+    def add_entity(self, entity_name: str, attributes: list[dict]):
+        attr_str = "\n  ".join(self.sanitize_attributes(attributes))
         self.entities.append(f'{entity_name} {{\n  {attr_str}\n}}')
+
+    def sanitize_attributes(self, attributes):
+        # Escaping is still in progress issue:
+        # https://github.com/mermaid-js/mermaid/issues/5123
+        _attributes = []
+        # re.sub('[^a-zA-Z0-9 \n\.]', '', my_str)
+        for attribute in attributes:
+            # replace spaces with "-"
+            column_name = re.sub(r'\s+', '-', attribute["column_name"])
+            column_type = re.sub(r'\s+', '-', attribute["column_type"])
+            # replace special characters with underscore
+            column_name = re.sub(r'[^a-zA-Z0-9\-()]', '_', column_name)
+            column_type = re.sub(r'[^a-zA-Z0-9\-()]', '_', column_type)
+            _attributes.append(f'{column_name} {column_type}')
+        return _attributes
 
     def add_relationship(self, entity1, entity2, relationship, rel_type="1:N"):
         # Define relationship labels based on relationship type
