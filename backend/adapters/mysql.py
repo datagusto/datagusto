@@ -88,13 +88,14 @@ class MySQLConnection(Connection):
                 }
 
                 # Using next() with a generator expression to find the first matching relationship or None
-                _, table_name, column_name = next((r for r in relationships if column_name == r[0]), (None, None, None))
-                if table_name:
+                _, ref_table_name, ref_column_name = next((r for r in relationships if column_name == r[0]),
+                                                          (None, None, None))
+                if ref_table_name:
                     column_info.update({
-                        "referenced_table_name": table_name,
-                        "referenced_column_name": column_name
+                        "referenced_table_name": ref_table_name,
+                        "referenced_column_name": ref_column_name
                     })
-                    relationships.remove((column_name, table_name, column_name))
+                    relationships.remove((column_name, ref_table_name, ref_column_name))
 
                 # Using dict.setdefault to simplify the if-else block
                 all_columns.setdefault(table, []).append(column_info)

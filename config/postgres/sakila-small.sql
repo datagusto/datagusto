@@ -21,31 +21,39 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: city; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.city (
-    city_id integer,
-    city character varying(50),
-    country_id integer,
-    last_update timestamp without time zone
-);
-
-
-ALTER TABLE public.city OWNER TO postgres;
-
---
 -- Name: country; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.country (
-    country_id integer,
+    country_id integer PRIMARY KEY,
     country character varying(50),
     last_update timestamp without time zone
 );
-
-
 ALTER TABLE public.country OWNER TO postgres;
+
+
+--
+-- Name: city; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.city (
+    city_id integer PRIMARY KEY,
+    city character varying(50),
+    country_id integer REFERENCES public.country(country_id),
+    last_update timestamp without time zone
+);
+ALTER TABLE public.city OWNER TO postgres;
+
+--
+-- Data for Name: country; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.country (country_id, country, last_update) FROM stdin;
+20	Canada	2006-02-15 04:44:00
+50	Japan	2006-02-15 04:44:00
+102	United Kingdom	2006-02-15 04:44:00
+\.
+
 
 --
 -- Data for Name: city; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -56,17 +64,6 @@ COPY public.city (city_id, city, country_id, last_update) FROM stdin;
 313	London	20	2006-02-15 04:45:25
 376	Okayama	50	2006-02-15 04:45:25
 377	Okinawa	50	2006-02-15 04:45:25
-\.
-
-
---
--- Data for Name: country; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.country (country_id, country, last_update) FROM stdin;
-20	Canada	2006-02-15 04:44:00
-50	Japan	2006-02-15 04:44:00
-102	United Kingdom	2006-02-15 04:44:00
 \.
 
 

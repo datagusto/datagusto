@@ -1,3 +1,4 @@
+import re
 import uuid
 from logging import getLogger
 import base64
@@ -10,6 +11,8 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
+from core.mermaid import MermaidERD
+
 load_dotenv(dotenv_path=".env")
 
 from adapters.types import FileConfig
@@ -21,7 +24,7 @@ import schemas
 from core.auth import authenticate_user, generate_bearer_token, oauth2_scheme, verify_access_token
 from services.vectordb.utils import generate_docs_from_columns
 from database.database import SessionLocal, engine
-from services.generative_llm import generate_column_description
+from services.generative_llm import generate_column_description, query_llm
 from services.metadata import get_metadata, save_metadata
 from services.vectordb.load import storage_client, storage_client_join
 from services.joinable_table.offline import indexing
@@ -164,6 +167,35 @@ def create_data_source_from_file(detail: str = Form(...), file: UploadFile = Fil
 
     data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
     return data_source
+
+
+@app.post("/data_sources/{data_source_id}/erd/")
+def generate_erd_for_data_source(data_source_id: int, current_user: schemas.User = Depends(get_current_user),
+                                 db: Session = Depends(get_db)):
+    logger.debug("Generating ERD for data source: %s", data_source_id)
+    database_information_list = crud.get_database_information(db, data_source_id, current_user.id)
+    erds = []
+    for database_information in database_information_list:
+        logger.info("Generating ERD for database: %s", database_information.database_name)
+        erd = MermaidERD(title=database_information.database_name)
+        for table_information in database_information.table_information:
+            logger.info("Generating ERD for table: %s", table_information.table_name)
+            table_name = table_information.table_name
+            table_info = table_information.table_info
+            columns = table_info.get("columns")
+            columns_attributes = []
+            for column in columns:
+                column_name = column.get("column_name")
+                # replace all white spaces with bar because mermaid does not support white spaces
+                columns_attributes.append({"column_name": column_name, "column_type": column['column_type']})
+                if "referenced_table_name" in column:
+                    erd.add_relationship(table_name, column["referenced_table_name"], "contains")
+            erd.add_entity(table_name, columns_attributes)
+
+            logger.info("Generating ERD for table: %s", table_name)
+            logger.info("Table information: %s", table_info)
+        erds.append(erd.generate_code())
+    return {"erds": erds}
 
 
 @app.post("/metadata/")
@@ -363,3 +395,9 @@ def post_find_data_matching(matching: str = Form(...), target_file: UploadFile =
     response = StreamingResponse(iter([buffer.getvalue()]), media_type="text/csv")
     response.headers["Content-Disposition"] = "attachment; filename=data.csv"
     return response
+
+
+@app.post("/llm/query")
+def post_llm_query(body: schemas.QueryRequest, current_user: schemas.User = Depends(get_current_user)):
+    query = body.query
+    return query_llm(query)
