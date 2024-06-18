@@ -10,15 +10,35 @@ logger = getLogger("uvicorn.app")
 
 TABLES_SQL = """
 SELECT table_name FROM information_schema.tables
-WHERE table_schema='public'
+WHERE table_schema='{database_schema}'
     AND table_type='BASE TABLE'
+    AND table_catalog='{database_name}'
 """
 
 COLUMN_INFORMATION_SQL = """
 SELECT * FROM information_schema.columns
-WHERE table_schema = '{SCHEMA}'
-    AND table_name   = '{TABLE}'
+WHERE table_schema = '{database_schema}'
+    AND table_name   = '{table_name}'
+    AND table_catalog='{database_name}'
 """
+
+RELATIONSHIP_INFORMATION_SQL = """
+SELECT
+    kcu.column_name, 
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name 
+FROM 
+    information_schema.table_constraints AS tc 
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE constraint_type = 'FOREIGN KEY' 
+    AND tc.table_name='{table_name}' 
+    AND tc.table_schema='{database_schema}'
+    AND tc.table_catalog='{database_name}'
+"""
+
 
 class PostgreSQLConnection(Connection):
     connection: Any = None
@@ -62,19 +82,29 @@ class PostgreSQLConnection(Connection):
 
     def get_all_tables(self):
         self.set_cursor()
-        self.cursor.execute(TABLES_SQL)
+        self.cursor.execute(TABLES_SQL.format(database_name=self.get_database_name(), database_schema=self.schema))
         tables = self.cursor.fetchall()
         self.close()
         return [table[0] for table in tables]
 
     def get_all_columns(self):
-        # TODO: implement this method
         tables = self.get_all_tables()
         self.set_cursor()
         all_columns = {}
         for table in tables:
-            self.cursor.execute(COLUMN_INFORMATION_SQL.format(SCHEMA=self.schema, TABLE=table))
+            logger.debug("Getting column information (metadata) of table :" + table)
+            self.cursor.execute(COLUMN_INFORMATION_SQL.format(
+                database_name=self.get_database_name(),
+                database_schema=self.schema,
+                table_name=table)
+            )
             columns = self.cursor.fetchall()
+            self.cursor.execute(RELATIONSHIP_INFORMATION_SQL.format(
+                database_name=self.get_database_name(),
+                database_schema=self.schema,
+                table_name=table)
+            )
+            relationships = self.cursor.fetchall()
 
             for column in columns:
                 (table_catalog, table_schema, table_name, column_name, ordinal_position, column_default, is_nullable,
@@ -89,6 +119,16 @@ class PostgreSQLConnection(Connection):
                     "column_name": column_name,
                     "column_type": data_type,
                 }
+
+                # Using next() with a generator expression to find the first matching relationship or None
+                _, ref_table_name, ref_column_name = next((r for r in relationships if column_name == r[0]),
+                                                          (None, None, None))
+                if ref_table_name:
+                    column_info.update({
+                        "referenced_table_name": ref_table_name,
+                        "referenced_column_name": ref_column_name
+                    })
+                    relationships.remove((column_name, ref_table_name, ref_column_name))
 
                 # TODO: need to extract relationship information more
                 all_columns.setdefault(table, []).append(column_info)
