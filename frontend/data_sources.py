@@ -187,7 +187,12 @@ def test_connection(dtype, username, password, hostname, port, database_name):
 
 # Function to update the port based on database type selection
 def get_default_port(db_type):
-    return 3306 if db_type == "mysql" else 5432
+    port = 3306
+    if db_type == "postgresql":
+        port = 5432
+    elif db_type == "oracle":
+        port = 1521
+    return port
 
 
 def add_data_source_form(default_port, selected_db_type):
@@ -206,13 +211,15 @@ def add_data_source_form(default_port, selected_db_type):
             # file
             data_source_file = st.file_uploader("Data source file: Choose a CSV file to be upload:", type="csv")
             file_type = st.selectbox("File Type", ["csv"])
-        elif dtype in ["mysql", "postgresql"]:
+        elif dtype in ["mysql", "postgresql", "oracle"]:
             # database (mysql, postgres)
             hostname = st.text_input("Hostname")
             port = st.number_input("Port", value=default_port)  # Use the default port here
             database_name = st.text_input("Database Name")
             if dtype == "postgresql":
                 schema = st.text_input("Schema", value="public")
+            if dtype == "oracle":
+                schema = st.text_input("Schema", value="system")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
 
@@ -244,7 +251,7 @@ def add_data_source_form(default_port, selected_db_type):
                     connection = {}
                     result = conn.create_data_source_as_file(name, dtype, description, connection, data_source_file,
                                                              file_type)
-                if dtype in ["mysql", "postgresql"]:
+                if dtype in ["mysql", "postgresql", "oracle"]:
                     connection = {
                         "host": hostname,
                         "port": port,
@@ -252,7 +259,7 @@ def add_data_source_form(default_port, selected_db_type):
                         "password": password,
                         "database": database_name
                     }
-                    if dtype == "postgresql":
+                    if dtype in ["postgresql", "oracle"]:
                         connection["schema"] = schema
                         connection["dbname"] = connection.pop("database")
                         connection["user"] = connection.pop("username")

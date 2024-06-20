@@ -18,6 +18,8 @@ def main():
     data_sources_select = [f"{data_source['id']}. {data_source['name']}" for data_source in data_sources]
     db_type_selection = st.selectbox("Select Database Type", data_sources_select, key="db_type_selection")
 
+    if db_type_selection is None:
+        return
     response = post_generate_erd(int(db_type_selection.split(".")[0]))
     if response["status_code"] != 200:
         st.error("Failed to generate ERD.")
