@@ -13,7 +13,6 @@ from models import DataSource, data_source_types
 def view_data_source_details(ds: DataSource):
     st.markdown(ds.get_details_markdown())
 
-
 def list_data_sources():
     with st.spinner():
         data_dicts = conn.get_data_sources()
@@ -35,8 +34,8 @@ def list_data_sources():
                     st.write(f"Description: {ds.description}")
                     view_checkbox = st.checkbox("Show Details", key=f"view_data_source_{ds.id}")
                 with col2:
-                    delete_button = st.button("Delete", key=f"delete_{ds.id}", disabled=True)
-                    delete_check_button = st.checkbox("Check to delete", key=f"delete_check_{ds.id}", disabled=True)
+                    delete_button = st.button("Delete", key=f"delete_{ds.id}")
+                    delete_check_button = st.checkbox("Check to delete", key=f"delete_check_{ds.id}")
 
                 if view_checkbox:
                     # This will open the edit form with pre-filled data
@@ -44,9 +43,21 @@ def list_data_sources():
                     pass
 
                 if delete_button and delete_check_button:
-                    # Implement delete logic
-                    pass
-                    # st.rerun()
+                    delete_data_source(ds.id)
+                    st.rerun()
+
+
+def delete_data_source(ds_id):
+    try:
+        result = conn.delete_data_source(ds_id)
+        status_code = result.pop("status_code", 200)
+
+        if status_code != 200:
+            st.error(f"Error deleting data source:\n\n{result}")
+        else:
+            st.success("Data source deleted successfully!")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 
 
 def set_current_data_source_id():

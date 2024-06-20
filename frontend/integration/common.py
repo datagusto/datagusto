@@ -74,6 +74,21 @@ def post_request_with_files(path: str, files: dict, payload: Optional[dict] = No
     return response
 
 
+def delete_request(path: str, timeout=1200, authentication=True):
+    url = f"{BACKEND_ENDPOINT}/{path}"
+    response = requests.request(
+        method="DELETE",
+        url=url,
+        headers=generate_header(authentication),
+        timeout=timeout
+    )
+
+    if response.status_code == HTTP_490_JWT_EXPIRED:
+        del st.session_state.access_token
+        st.error("Session expired. Please log in again.")
+
+    return response
+
 def generate_header(authentication=True):
     headers = HEADERS
     if authentication:
