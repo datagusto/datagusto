@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from .common import get_request, post_request, post_request_with_files
+from .common import get_request, post_request, post_request_with_files, delete_request
 
 
 def get_data_source(data_source_id: int):
@@ -34,6 +34,12 @@ def create_data_source(
     response_dict["status_code"] = response.status_code
     return response_dict
 
+def delete_data_source(data_source_id: int):
+    path = f"data_sources/{data_source_id}"
+    response = delete_request(path)
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+    return response_dict
 
 def create_data_source_as_file(
         name: str,

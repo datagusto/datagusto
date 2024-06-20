@@ -53,3 +53,8 @@ def save_metadata(data_source_id: int, user_id: int, database_name: str, all_col
     logger.debug("Saving database column information to the database. data_source_id=%s, database_name=%s",
                  data_source_id, database_name)
     crud.create_database_information(db, database_information, user_id)
+
+
+def delete_metadata(db: Session, data_source_id: int, user_id: int):
+    logger.debug("Deleting metadata from the database. data_source_id=%s", data_source_id)
+    crud.delete_database_information(db, data_source_id, user_id)

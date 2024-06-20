@@ -13,7 +13,6 @@ from models import DataSource, data_source_types
 def view_data_source_details(ds: DataSource):
     st.markdown(ds.get_details_markdown())
 
-
 def list_data_sources():
     with st.spinner():
         data_dicts = conn.get_data_sources()
@@ -35,8 +34,8 @@ def list_data_sources():
                     st.write(f"Description: {ds.description}")
                     view_checkbox = st.checkbox("Show Details", key=f"view_data_source_{ds.id}")
                 with col2:
-                    delete_button = st.button("Delete", key=f"delete_{ds.id}", disabled=True)
-                    delete_check_button = st.checkbox("Check to delete", key=f"delete_check_{ds.id}", disabled=True)
+                    delete_button = st.button("Delete", key=f"delete_{ds.id}")
+                    delete_check_button = st.checkbox("Check to delete", key=f"delete_check_{ds.id}")
 
                 if view_checkbox:
                     # This will open the edit form with pre-filled data
@@ -44,9 +43,21 @@ def list_data_sources():
                     pass
 
                 if delete_button and delete_check_button:
-                    # Implement delete logic
-                    pass
-                    # st.rerun()
+                    delete_data_source(ds.id)
+                    st.rerun()
+
+
+def delete_data_source(ds_id):
+    try:
+        result = conn.delete_data_source(ds_id)
+        status_code = result.pop("status_code", 200)
+
+        if status_code != 200:
+            st.error(f"Error deleting data source:\n\n{result}")
+        else:
+            st.success("Data source deleted successfully!")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 
 
 def set_current_data_source_id():
@@ -187,7 +198,12 @@ def test_connection(dtype, username, password, hostname, port, database_name):
 
 # Function to update the port based on database type selection
 def get_default_port(db_type):
-    return 3306 if db_type == "mysql" else 5432
+    port = 3306
+    if db_type == "postgresql":
+        port = 5432
+    elif db_type == "oracle":
+        port = 1521
+    return port
 
 
 def add_data_source_form(default_port, selected_db_type):
@@ -206,13 +222,15 @@ def add_data_source_form(default_port, selected_db_type):
             # file
             data_source_file = st.file_uploader("Data source file: Choose a CSV file to be upload:", type="csv")
             file_type = st.selectbox("File Type", ["csv"])
-        elif dtype in ["mysql", "postgresql"]:
+        elif dtype in ["mysql", "postgresql", "oracle"]:
             # database (mysql, postgres)
             hostname = st.text_input("Hostname")
             port = st.number_input("Port", value=default_port)  # Use the default port here
             database_name = st.text_input("Database Name")
             if dtype == "postgresql":
                 schema = st.text_input("Schema", value="public")
+            if dtype == "oracle":
+                schema = st.text_input("Schema", value="system")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
 
@@ -244,7 +262,7 @@ def add_data_source_form(default_port, selected_db_type):
                     connection = {}
                     result = conn.create_data_source_as_file(name, dtype, description, connection, data_source_file,
                                                              file_type)
-                if dtype in ["mysql", "postgresql"]:
+                if dtype in ["mysql", "postgresql", "oracle"]:
                     connection = {
                         "host": hostname,
                         "port": port,
@@ -252,7 +270,7 @@ def add_data_source_form(default_port, selected_db_type):
                         "password": password,
                         "database": database_name
                     }
-                    if dtype == "postgresql":
+                    if dtype in ["postgresql", "oracle"]:
                         connection["schema"] = schema
                         connection["dbname"] = connection.pop("database")
                         connection["user"] = connection.pop("username")

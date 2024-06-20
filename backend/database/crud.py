@@ -49,6 +49,17 @@ def create_data_source(db: Session, data_source: schemas.DataSourceCreate, user_
     db.refresh(new_data_source)
     return new_data_source
 
+def delete_data_source(db: Session, data_source_id: int, user_id: int) -> bool:
+    data_source = db.query(models.DataSource).filter(
+        models.DataSource.id == data_source_id,
+        models.DataSource.owner_id == user_id
+    ).first()
+    if data_source:
+        db.delete(data_source)
+        db.commit()
+        return True
+    return False
+
 
 def create_database_information(db: Session, database_information_create: schemas.DatabaseInformationCreate, user_id: int) -> schemas.DatabaseInformation:
     # convert create class to dict, and create model class from it
@@ -75,6 +86,16 @@ def get_database_information(db: Session, data_source_id: int, user_id: Optional
     ).all()
     return [schemas.DatabaseInformation.from_orm(database) for database in database_information]
 
+def delete_database_information(db: Session, data_source_id: int, user_id: int) -> bool:
+    database_information = db.query(models.DatabaseInformation).filter(
+        models.DatabaseInformation.data_source_id == data_source_id,
+        models.DatabaseInformation.owner_id == user_id
+    ).first()
+    if database_information:
+        db.delete(database_information)
+        db.commit()
+        return True
+    return False
 
 def clear_database_table_information(db: Session):
     db.query(models.DatabaseInformation).delete()

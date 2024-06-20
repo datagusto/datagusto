@@ -25,7 +25,7 @@ from core.auth import authenticate_user, generate_bearer_token, oauth2_scheme, v
 from services.vectordb.utils import generate_docs_from_columns
 from database.database import SessionLocal, engine
 from services.generative_llm import generate_column_description, query_llm
-from services.metadata import get_metadata, save_metadata
+from services.metadata import get_metadata, save_metadata, delete_metadata
 from services.vectordb.load import storage_client, storage_client_join
 from services.joinable_table.offline import indexing
 from services.joinable_table.online import join_data
@@ -142,6 +142,26 @@ def create_data_source(data_source: schemas.DataSourceCreate, current_user: sche
     logger.info("Creating data source in the database. %s", data_source.name)
     data_source = crud.create_data_source(db=db, data_source=data_source, user_id=current_user.id)
     return data_source
+
+
+@app.delete("/data_sources/{data_source_id}")
+def delete_data_source_by_id(data_source_id: int, current_user: schemas.User = Depends(get_current_user),
+                             db: Session = Depends(get_db)):
+    data_source = crud.get_data_source(db, data_source_id=data_source_id, 
+    user_id=current_user.id)
+
+    if not data_source:
+        raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
+    
+    # delete metadata
+    logger.info("Deleting metadata for data source: %s", data_source_id)
+    delete_metadata(db, data_source_id, current_user.id)
+    # delete vectors
+    logger.info("Deleting vectors for data source: %s", data_source_id)
+    storage_client.delete_by_filter({"data_source_id": data_source_id})
+
+    crud.delete_data_source(db, data_source_id, current_user.id)
+    return {"message": "Data source deleted successfully"}
 
 
 @app.post("/data_sources/file/", response_model=schemas.DataSource)
