@@ -7,6 +7,7 @@ from fastapi import HTTPException
 import schemas
 from .file import FileConnection
 from .mysql import MySQLConnection
+from .oracle import OracleConnection
 from .postgres import PostgreSQLConnection
 from .types import DataSourceType
 
@@ -41,6 +42,13 @@ def get_connection(data_source: Union[schemas.DataSourceBase, schemas.DataSource
         if data_source.type == DataSourceType.PostgreSQL:
             logger.debug(message.format(DATA_SOURCE="PostgreSQL"))
             connection = PostgreSQLConnection(
+                name=data_source.name,
+                description=data_source.description,
+                config=data_source.connection
+            )
+        if data_source.type == DataSourceType.Oracle:
+            logger.debug(message.format(DATA_SOURCE="Oracle"))
+            connection = OracleConnection(
                 name=data_source.name,
                 description=data_source.description,
                 config=data_source.connection

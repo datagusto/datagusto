@@ -130,7 +130,6 @@ class PostgreSQLConnection(Connection):
                     })
                     relationships.remove((column_name, ref_table_name, ref_column_name))
 
-                # TODO: need to extract relationship information more
                 all_columns.setdefault(table, []).append(column_info)
         self.close()
         return all_columns
