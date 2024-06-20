@@ -12,6 +12,7 @@ class DataSourceType(enum.Enum):
     SpreadSheet = "spreadsheet"
     Snowflake = "snowflake"
     BigQuery = "bigquery"
+    Oracle = "oracle"
 
 
 class MySQLConfig(BaseModel):
@@ -38,6 +39,18 @@ class PostgreSQLConfig(BaseModel):
     def host_port(self):
         return f"{self.host}:{self.port}"
 
+
+class OracleConfig(BaseModel):
+    host: str
+    port: int
+    user: str
+    password: str
+    dbname: str
+    schema: Optional[str]
+
+    @property
+    def dsn(self):
+        return f"{self.host}:{self.port}/{self.dbname}"
 
 class FileConfig(BaseModel):
     file_type: str

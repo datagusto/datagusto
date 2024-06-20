@@ -26,6 +26,10 @@ class VectorDatabase(ABC):
     @abstractmethod
     def query_with_score(self, query: str, user_id: Optional[int], filter, top_k: int = 5, **kwargs) -> list[tuple[Document, float]]:
         raise NotImplementedError
+    
+    @abstractmethod
+    def delete_by_filter(self, filter: dict, **kwargs):
+        raise NotImplementedError
 
     @abstractmethod
     def clear(self, **kwargs):

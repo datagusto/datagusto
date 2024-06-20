@@ -46,6 +46,7 @@ bcrypt = "*"
 python-jose = "*"
 langchain-community = "*"
 sentencepiece = "*"
+oracledb = "*"
 
 [dev-packages]
 

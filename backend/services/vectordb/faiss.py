@@ -52,6 +52,25 @@ class FaissDB(VectorDatabase):
             return []
         results = db.similarity_search_with_score(query, filter=filter, k=top_k)
         return results
+    
+    def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs):
+        db = self._load_local_vectorstore(storage_path)
+        if not db:
+            return False
+        
+        doc_id_list = []
+        for doc_id, doc in db.docstore._dict.items():
+            is_match = all([doc.metadata.get(key) == value for key, value in filter.items()])
+            if is_match:
+                doc_id_list.append(doc_id)
+
+        if len(doc_id_list) > 0:
+            db.delete(doc_id_list)
+            db.save_local(storage_path or self.storage_path)
+            return True
+        
+        return False
+        
 
     def clear(self, storage_path: Optional[str] = None, **kwargs):
         db = self._load_local_vectorstore(storage_path)
