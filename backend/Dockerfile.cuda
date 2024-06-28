@@ -24,7 +24,7 @@ RUN pip install pipenv
 
 COPY ./Pipfile* ./
 RUN rm Pipfile.lock
-RUN pipenv install --system --deploy --categories="packages torch_cu121"
+RUN pipenv install --categories="packages torch_cu121"
 
 # Copy source code
 COPY ./ ./

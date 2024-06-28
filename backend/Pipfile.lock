@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "46757c37543711e543b7aebcda437d7bc79d7d11adb43e6dbfbf1f52017a1a10"
+            "sha256": "63648b55c39a574d2938329f381aa7f8f0d309092045d4adf83d87f43648e508"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,11 +26,6 @@
             {
                 "name": "torch_cu12.1",
                 "url": "https://download.pytorch.org/whl/cu121",
-                "verify_ssl": true
-            },
-            {
-                "name": "torch_cu11.8",
-                "url": "https://download.pytorch.org/whl/cu118",
                 "verify_ssl": true
             }
         ]
@@ -1220,7 +1215,7 @@
                 "sha256:f870204a840a60da0b12273ef34f7051e98c3b5961b61b0c2c1be6dfd64fbcd3",
                 "sha256:ffa75af20b44f8dba823498024771d5ac50620e6915abac414251bd971b4529f"
             ],
-            "markers": "python_version < '3.11'",
+            "markers": "python_version >= '3.9'",
             "version": "==1.26.4"
         },
         "openai": {
@@ -2955,7 +2950,7 @@
                 "sha256:f870204a840a60da0b12273ef34f7051e98c3b5961b61b0c2c1be6dfd64fbcd3",
                 "sha256:ffa75af20b44f8dba823498024771d5ac50620e6915abac414251bd971b4529f"
             ],
-            "markers": "python_version < '3.11'",
+            "markers": "python_version >= '3.9'",
             "version": "==1.26.4"
         },
         "packaging": {
