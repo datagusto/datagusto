@@ -26,7 +26,8 @@ No more SQL for data mart or data migration. No dependency on architecture.
 This project assumes you have:
 
 - `docker` and `docker-compose`
-- API credentials for OpenAI API or Azure OpenAI
+- If using GPT: API credentials for OpenAI API or Azure OpenAI
+- If running LLM locally: Huggingface access token
 
 ### Procedure
 
@@ -145,22 +146,17 @@ TBA
 
 ### Running on CUDA
 
-Because of the `pipenv` restriction ([here](https://github.com/pypa/pipenv/issues/3702)), you need to install following
-way:
+We have prepared additional `docker-compose.cuda.yml` and `backend/Dockerfile.cuda` for running on CUDA.
+Please run following command if you want to run on your CUDA 12 environment.
 
 ```shell
-# go to backend folder
-cd backend
-# delete Pipfile.lock
-rm Pipfile.lock
-
-# install with CUDA 12
-pipenv install --categories="torch_cu121 packages"
-# install with CUDA 11
-pipenv install --categories="torch_cu118 packages"
+# go to root directory
+docker compose -f docker-compose.yml -f docker-compose.cuda.yml up
 ```
 
 ### Running on Apple Silicon MPS
+
+We have not fully tested docker version on MPS. Please run as standalone application to use MPS on Apple device.
 
 In order to use Apple Silicon GPU for locally running LLM model, install following programs, and restart your terminal.:
 
@@ -169,16 +165,12 @@ In order to use Apple Silicon GPU for locally running LLM model, install followi
 $ curl — proto ‘=https’ — tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Because torch version 2.2.2 is failing to run on Apple Silicon MPS, you need to install torch version 2.3:
-
+Install packages using pipenv virtual environment.
 ```shell
 # go to backend folder
 cd backend
-# delete Pipfile.lock
-rm Pipfile.lock
 
-# install with torch 2.3
-pipenv install --categories="torch_mps packages"
+pipenv install --categories="torch packages"
 ```
 
 ### Running LLM locally
@@ -189,11 +181,8 @@ We have conducted some experiments with some popular open source LLM models:
 | Model Name                         | Model size | Support language | Response value |
 |------------------------------------|------------|------------------|----------------|
 | microsoft/Phi-3-mini-4k-instruct   | 3.8b       | English          | Good           |
-| mistralai/Mistral-7B-v0.1          | 7b         | English          | Good           |
 | mistralai/Mistral-7B-Instruct-v0.3 | 7b         | English          | Good           |
-| bofenghuang/vigogne-2-7b-chat      | 7b         | English          | Good           |
-| google/gemma-2b-it                 | 2b         | English          | Good           |
-| google/gemma-1.1-2b-it             | 2b         | English          | Good           |
+| google/gemma-7b                    | 7b         | English          | Good           |
 | Rakuten/RakutenAI-7B-instruct      | 7b         | English+Japanese | Good           |
 
 Response is validated by sending table and column information to LLM and check if it can generate meaningful
