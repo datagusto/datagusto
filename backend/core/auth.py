@@ -4,8 +4,8 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
 
-import schemas
-from database import crud
+from database.crud import user as user_crud
+from schemas.user import User
 
 # Security
 SECRET_KEY = "secret-key"
@@ -17,8 +17,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
 HTTP_490_JWT_EXPIRED = 490
 
 
-def authenticate_user(db, username: str, password: str) -> Optional[schemas.User]:
-    user = crud.get_user(db, username)
+def authenticate_user(db, username: str, password: str) -> Optional[User]:
+    user = user_crud.get_user(db, username)
     if not user or not user.check_password(password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -47,7 +47,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def verify_access_token(token: str, db) -> schemas.User:
+def verify_access_token(token: str, db) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid token",
@@ -65,7 +65,7 @@ def verify_access_token(token: str, db) -> schemas.User:
             raise credentials_exception
     except JWTError:
         raise expired_exception
-    user = crud.get_user(db, username)
+    user = user_crud.get_user(db, username)
     if user is None:
         raise credentials_exception
     return user

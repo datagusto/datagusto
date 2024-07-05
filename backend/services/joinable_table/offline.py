@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
 
-from adapters.connections import get_connection
-from database import crud
+from core.data_source_adapter.factory import DataSourceFactory
+from core.vector_db_adapter.factory import VectorDatabaseFactory
+from database.crud import data_source as data_source_crud
+from database.crud import metadata as metadata_crud
 from .sub import generate_text_from_data, flatten_concatenation
-from ..vectordb.load import storage_client_join
 
 logger = getLogger("uvicorn.app")
 
@@ -20,16 +21,22 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     # model, tokenizer = load_model(model_path)
 
     # get data from target data source
-    data_source = crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
+    data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         return HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
     
     # create connection to data source
-    connection = get_connection(data_source)
+    factory = DataSourceFactory(
+        adapter_name=data_source.type,
+        name=data_source.name,
+        description=data_source.description,
+        connection=data_source.connection
+    )
+    connection = factory.get_data_source()
 
     # create index
-    database_information_list = crud.get_database_information(db, data_source_id, user_id)
+    database_information_list = metadata_crud.get_database_information(db, data_source_id, user_id)
     repository_texts = []
     docs = []
     for database_information in database_information_list:
@@ -65,7 +72,9 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     # save index
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     docs = text_splitter.split_documents(docs)
-    storage_client_join.save(docs)
+    factory = VectorDatabaseFactory()
+    vector_db_join_client = factory.get_vector_database_join()
+    vector_db_join_client.save(docs)
     
     # tokenize texts
     # inputs = tokenizer(repository_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
