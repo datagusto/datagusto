@@ -37,6 +37,7 @@ SCHEMA = {
 
 
 class WeaviateDBBase(VectorDatabaseBase):
+    client: weaviate.client.Client
     class_name: str
     attributes: list[str] = METADATA_ATTRIBUTES
     schema: dict
@@ -132,6 +133,20 @@ class WeaviateDBBase(VectorDatabaseBase):
         # print results
         return data
 
+    def delete_by_filter(self, filter: dict, **kwargs):
+        logger.debug("VectorDB log: Deleting data of data source : " + str(filter))
+        data_source_id = filter["data_source_id"]
+        where_filter = {
+            "path": ["data_source_id"],
+            "operator": "Equal",
+            "valueNumber" if isinstance(data_source_id, int) else "valueString": data_source_id
+        }
+        result = self.client.batch.delete_objects(
+            class_name=self.class_name,
+            where=where_filter,
+        )
+        return result
+
     def clear(self, **kwargs):
         self.client.schema.delete_all()
 
@@ -179,7 +194,7 @@ class WeaviateEmbedDB(WeaviateDBBase):
 class WeaviateServerDB(WeaviateDBBase):
     def __init__(self, endpoint: Optional[str] = None, class_name: str = WEAVIATE_CLASS_NAME, attributes: list[str] = None, **kwargs):
         # embedded weaviate's path is constant, cant not be changed
-        endpoint = WEAVIATE_DEFAULT_ENDPOINT
+        endpoint = endpoint or WEAVIATE_DEFAULT_ENDPOINT
         client = weaviate.Client(
             url=endpoint,
         )

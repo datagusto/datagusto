@@ -28,6 +28,7 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int):
         for column in columns:
             logger.info(f"Generating column description for column: {table_name=}, {column=}")
             column["description"] = generate_column_description(column, table_name)
+            logger.info(f"Generated column description: {column['description']}")
 
     # save metadata to db
     logger.info("Saving metadata to the database")
