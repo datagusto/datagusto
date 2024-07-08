@@ -16,6 +16,7 @@ logger = getLogger("uvicorn.app")
 
 
 def indexing(data_source_id: int, user_id: int, db: Session):
+    # TODO: this need to be triggered when new data source is added automatically
     # load tokenizer
     # model_path = "./models/model_ver1.0"
     # model, tokenizer = load_model(model_path)

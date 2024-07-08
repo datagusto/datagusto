@@ -9,9 +9,14 @@ load_dotenv(dotenv_path=".env")
 from dependencies import get_current_user
 from database import models
 from database.database import engine
+
+from endpoints.common import router as common_router
 from endpoints.user import router as user_router
 from endpoints.data_sources import router as data_sources_router
 from endpoints.metadata import router as metadata_router
+from endpoints.joinable import router as joinable_router
+from endpoints.matching import router as matching_router
+from endpoints.analysis import router as analysis_router
 
 logger = getLogger("uvicorn.app")
 
@@ -42,6 +47,10 @@ def exception_handler(request, exc):
     }, 200
 
 
+app.include_router(common_router, prefix="/common")
 app.include_router(user_router, prefix="/user")
 app.include_router(data_sources_router, prefix="/data_sources", dependencies=[Depends(get_current_user)])
 app.include_router(metadata_router, prefix="/metadata", dependencies=[Depends(get_current_user)])
+app.include_router(joinable_router, prefix="/joinable", dependencies=[Depends(get_current_user)])
+app.include_router(matching_router, prefix="/matching", dependencies=[Depends(get_current_user)])
+app.include_router(analysis_router, prefix="/analysis", dependencies=[Depends(get_current_user)])
