@@ -3,6 +3,7 @@ import numpy as np
 
 THRESHOLD_NUNIQUE_SIZE = 2
 
+
 def infer_types(df_original: pd.DataFrame) -> pd.DataFrame:
     df = df_original.copy()
 
@@ -22,7 +23,7 @@ def infer_types(df_original: pd.DataFrame) -> pd.DataFrame:
 
         # try to convert into datetime
         try:
-            df[i] = pd.to_datetime(df[i], errors='ignore', infer_datetime_format=True, errors="raise")
+            df[i] = pd.to_datetime(df[i], errors='ignore', infer_datetime_format=True)
             continue
         except ValueError:
             pass
@@ -31,7 +32,7 @@ def infer_types(df_original: pd.DataFrame) -> pd.DataFrame:
     for i in df.select_dtypes(include=["bool", "category"]).columns:
         df[i] = df[i].astype("object")
     
-    # Pandas interprets a integer columns containing missing values as a float column.
+    # Pandas interprets an integer columns containing missing values as a float column.
     for i in df.select_dtypes(include=["float64"]).columns:
         count_rows = len(df[i])
         count_unique = df[i].nunique()
@@ -40,6 +41,5 @@ def infer_types(df_original: pd.DataFrame) -> pd.DataFrame:
         count_others = len(df[i]) - count_int - count_nan
 
         # if the column has integer values and NaNs, then it is an integer column
-
 
     return df

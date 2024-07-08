@@ -1,7 +1,6 @@
 from logging import getLogger
 
 from transformers import MPNetModel, MPNetTokenizer
-import os
 import numpy as np
 
 logger = getLogger("uvicorn.app")

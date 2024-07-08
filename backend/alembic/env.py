@@ -30,6 +30,7 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+print(os.environ["SQLALCHEMY_DATABASE_URI"])
 config.set_section_option("alembic", "DB_URL", os.environ["SQLALCHEMY_DATABASE_URI"])
 
 def run_migrations_offline() -> None:

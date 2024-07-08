@@ -1,10 +1,11 @@
 import pandas as pd
 from logging import getLogger
-from services.llm.load import llm
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores.faiss import FAISS
-from services.vectordb.custom_embedding import CustomEmbedding
+
+from core.llm_adapter.factory import LlmFactory
+from core.vector_db_adapter.custom_embedding import CustomEmbedding
 
 logger = getLogger("uvicorn.app")
 
@@ -68,6 +69,8 @@ def process_df(name: str, df: pd.DataFrame):
     column_description = []
     for c in unique_columns:
         logger.debug("Processing column: %s", c)
+        factory = LlmFactory()
+        llm = factory.get_llm()
         r = llm.completion(
             PROMPT_COLUMN_DESCRIPTION_TEMPLATE.format(TABLE_NAME=name, COLUMN_NAME=c)
         )
@@ -75,7 +78,7 @@ def process_df(name: str, df: pd.DataFrame):
     return unique_columns, column_description
 
 
-def find_schema_matching(
+def find_schema_matching_among_df(
     target_name: str,
     target_df: pd.DataFrame,
     source_name: str,
@@ -97,6 +100,8 @@ def find_schema_matching(
         # NOTE: This is a naive implementation. In the future, we should consider using a kNN search to find the better matching efficiently.
         for j, c_s in enumerate(unique_columns_source):
             logger.debug("Processing target column: %s, source column: %s", c_t, c_s)
+            factory = LlmFactory()
+            llm = factory.get_llm()
             r = llm.completion(
                 PROMPT_SCHEMA_MATCHING_TEMPLATE.format(
                     ATTR_A_NAME=c_t,
@@ -122,13 +127,15 @@ def entity_matching(record_a, record_b):
         RECORD_A=record_a_str,
         RECORD_B=record_b_str
     )
+    factory = LlmFactory()
+    llm = factory.get_llm()
     r = llm.completion(prompt)
     if r.startswith("Yes"):
         return True
     return False
 
 
-def find_data_matching(target_df: pd.DataFrame, source_df: pd.DataFrame, matching: dict):
+def find_data_matching_among_df(target_df: pd.DataFrame, source_df: pd.DataFrame, matching: dict):
     # create FAISS index
     db = {}
     for tk in matching:

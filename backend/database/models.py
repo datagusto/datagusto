@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from database.database import Base
-from adapters.types import DataSourceType
+from core.data_source_adapter.types import DataSourceType
 
 
 class User(Base):
