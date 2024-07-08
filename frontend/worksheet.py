@@ -3,9 +3,9 @@ import json
 import pandas as pd
 
 from auth import get_user_name
-from data_sources import get_data_source, show_select_data_source_dropdown
+from data_sources import get_data_source
 from models import Worksheet
-from integration.connection import sync_metadata, query_metadata, join_data, get_table_data
+from integration.connection import query_metadata, join_data, get_table_data
 
 
 def save_worksheet(worksheet_name, prompt, data_source_id, username):
@@ -33,10 +33,11 @@ def save_worksheet(worksheet_name, prompt, data_source_id, username):
     finally:
         pass
 
-def list_worksheets():
-    worksheets = None
 
-    if not worksheets:
+def list_worksheets():
+    worksheets = []
+
+    if len(worksheets) == 0:
         st.write("No worksheets have been added yet.")
         return
 

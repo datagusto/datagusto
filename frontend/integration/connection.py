@@ -16,6 +16,25 @@ def get_data_sources():
     return response.json()
 
 
+def test_data_source_connection(
+        name: str,
+        type: str,
+        description: str,
+        connection: dict
+):
+    path = "data_sources/test_connection/"
+    payload = {
+        "name": name,
+        "type": type,
+        "description": description,
+        "connection": connection
+    }
+    response = post_request(path, payload)
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+    return response_dict
+
+
 def create_data_source(
         name: str,
         type: str,

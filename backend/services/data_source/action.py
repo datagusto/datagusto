@@ -21,17 +21,8 @@ logger = getLogger("uvicorn.app")
 def create_data_source(db: Session, data_source: data_source_schema.DataSourceCreate, user_id: int) -> DataSource:
     # initialize connection based on the data source type
     logger.info("Creating data source, and checking db connection info correct.: %s", data_source.name)
-    factory = DataSourceFactory(
-        adapter_name=data_source.type,
-        name=data_source.name,
-        description=data_source.description,
-        connection=data_source.connection
-    )
-    connection = factory.get_data_source()
 
-    # test connection with the credentials
-    logger.info("Testing connection with the credentials. %s", data_source.name)
-    if not connection.test_connection():
+    if test_data_source_connection(data_source) is False:
         logger.exception("Invalid connection data. %s", data_source.name)
         raise Exception("Invalid connection data.")
 
@@ -65,6 +56,17 @@ def create_data_source_from_file(db: Session, detail: str, file: BinaryIO, file_
     connection.save_file(file)
 
     return data_source_crud.create_data_source(db=db, data_source=data_source, user_id=user_id)
+
+
+def test_data_source_connection(data_source: data_source_schema.DataSourceCreate) -> bool:
+    factory = DataSourceFactory(
+        adapter_name=data_source.type,
+        name=data_source.name,
+        description=data_source.description,
+        connection=data_source.connection
+    )
+    connection = factory.get_data_source()
+    return connection.test_connection()
 
 
 def get_sample_data_from_table(db: Session, data_source_id: int, table_name: str, user_id: int) -> pd.DataFrame:

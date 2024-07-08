@@ -32,7 +32,10 @@ class FileDataSource(DataSourceBase):
     def test_connection(self) -> bool:
         try:
             self.read_file()
-        except Exception:
+        except FileNotFoundError:
+            return False
+        except Exception as e:
+            logger.exception(e)
             return False
         return True
 

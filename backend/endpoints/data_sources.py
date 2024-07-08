@@ -9,7 +9,7 @@ from dependencies import get_db, get_current_user
 from schemas import data_source as data_source_schema
 from schemas.user import User
 from services.data_source.action import get_sample_data_from_table, create_data_source, delete_data_source_by_id, \
-    create_data_source_from_file
+    create_data_source_from_file, test_data_source_connection
 from services.metadata.action import delete_metadata
 
 router = APIRouter()
@@ -38,6 +38,12 @@ def req_get_columns_in_table(data_source_id: int, table_name: str, current_user:
     df = get_sample_data_from_table(db, data_source_id, table_name, current_user.id)
     response = {"data": df.to_json(orient="records")}
     return response
+
+
+@router.post("/test_connection", response_model=dict[str, bool])
+def req_test_data_source_connection(data_source: data_source_schema.DataSourceCreate):
+    result = test_data_source_connection(data_source)
+    return {"result": result}
 
 
 @router.post("/", response_model=data_source_schema.DataSource, status_code=status.HTTP_201_CREATED)
