@@ -32,14 +32,14 @@ def infer_types(df_original: pd.DataFrame) -> pd.DataFrame:
     for i in df.select_dtypes(include=["bool", "category"]).columns:
         df[i] = df[i].astype("object")
 
-    # Pandas interprets an integer columns containing missing values as a float column.
-    for i in df.select_dtypes(include=["float64"]).columns:
-        count_rows = len(df[i])
-        count_unique = df[i].nunique()
-        count_nan = sum(df[i].isnull())
-        count_int = sum([v.is_integer() for v in df[i]])
-        count_others = len(df[i]) - count_int - count_nan
-
-        # if the column has integer values and NaNs, then it is an integer column
+    # # Pandas interprets an integer columns containing missing values as a float column.
+    # for i in df.select_dtypes(include=["float64"]).columns:
+    #     count_rows = len(df[i])
+    #     count_unique = df[i].nunique()
+    #     count_nan = sum(df[i].isnull())
+    #     count_int = sum([v.is_integer() for v in df[i]])
+    #     count_others = len(df[i]) - count_int - count_nan
+    #
+    #     # if the column has integer values and NaNs, then it is an integer column
 
     return df

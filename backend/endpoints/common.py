@@ -10,11 +10,11 @@ logger = getLogger("uvicorn.app")
 
 
 @router.get("/health")
-def health():
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @router.post("/llm/query")
-def req_llm_query(body: QueryRequest):
+def req_llm_query(body: QueryRequest) -> str:
     query = body.query
     return query_llm(query)

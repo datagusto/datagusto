@@ -27,7 +27,7 @@ def req_get_data_sources(
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[data_source_schema.DataSource]:
     data_sources = data_source_crud.get_data_sources(db, skip=skip, limit=limit, user_id=current_user.id)
     return data_sources
 
@@ -37,7 +37,7 @@ def req_get_data_source_by_id(
     data_source_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> data_source_schema.DataSource:
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
     if not data_source:
         raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
@@ -50,14 +50,14 @@ def req_get_columns_in_table(
     table_name: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> dict:
     df = get_sample_data_from_table(db, data_source_id, table_name, current_user.id)
     response = {"data": df.to_json(orient="records")}
     return response
 
 
 @router.post("/test_connection", response_model=dict[str, bool])
-def req_test_data_source_connection(data_source: data_source_schema.DataSourceCreate):
+def req_test_data_source_connection(data_source: data_source_schema.DataSourceCreate) -> dict[str, bool]:
     result = test_data_source_connection(data_source)
     return {"result": result}
 
@@ -67,7 +67,7 @@ def req_create_data_source(
     data_source: data_source_schema.DataSourceCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> data_source_schema.DataSource:
     return create_data_source(db, data_source, current_user.id)
 
 
@@ -76,7 +76,7 @@ def req_delete_data_source_by_id(
     data_source_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> dict[str, str]:
     # delete metadata
     logger.info("Deleting metadata for data source: %s", data_source_id)
     delete_metadata(db, data_source_id, current_user.id)
@@ -98,5 +98,5 @@ def req_create_data_source_from_file(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> data_source_schema.DataSource:
     return create_data_source_from_file(db, detail, file.file, file.filename, current_user.id)

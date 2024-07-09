@@ -19,7 +19,7 @@ Please generate one sentence description for the column.
 """
 
 
-def generate_column_description(column_info: dict, table_name) -> str:
+def generate_column_description(column_info: dict, table_name: str) -> str:
     column_data = ""
     for key, value in column_info.items():
         column_data += f"{key}: {value}\n"

@@ -33,10 +33,10 @@ class User(UserBase):
     updated_at: datetime
 
     @classmethod
-    def hash_password(cls, password):
+    def hash_password(cls, password: str) -> str:
         return pwd_context.hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         return pwd_context.verify(password, self.password_hash)
 
     class Config:

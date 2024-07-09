@@ -27,7 +27,10 @@ lint.ignore = [
     "RET504",   # Unnecessary assignment to `input_str` before `return` statement
     "TRY003",   # Avoid specifying long messages outside the exception class
     "C901",     # `query_workspace_open_search` is too complex (28 > 10)
-#    "TID252",   # Prefer absolute imports over relative imports from parent modules
+    "TID252",   # Prefer absolute imports over relative imports from parent modules
+    "ANN101",   # Missing type annotation for `self` in method
+    "ANN102",   # Missing type annotation for `cls` in classmethod
+#    "B008",     # Do not perform function call `Depends` in argument defaults;
 ]
 include = [
     "pyproject.toml",
@@ -42,6 +45,22 @@ include = [
 
 # black compatibility
 line-length = 120
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.params.Depends",
+    "fastapi.Query",
+    "fastapi.params.Query",
+    "fastapi.Path",
+    "fastapi.params.Path",
+    "fastapi.Header",
+    "fastapi.params.Header",
+    "fastapi.Form",
+    "fastapi.params.Form",
+    "fastapi.File",
+    "fastapi.params.File",
+]
 
 [tool.ruff.format]
 quote-style = "double"

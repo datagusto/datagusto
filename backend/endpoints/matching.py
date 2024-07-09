@@ -21,7 +21,7 @@ def post_find_data_matching(
     matching: str = Form(...),
     target_file: UploadFile = File(...),
     source_file: UploadFile = File(...),
-):
+) -> StreamingResponse:
     response_buffer = find_data_matching(target_file.file, source_file.file, matching)
 
     # CSVファイルをストリーミングレスポンスとして返す

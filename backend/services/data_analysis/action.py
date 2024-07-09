@@ -9,7 +9,7 @@ from .mermaid import MermaidERD
 logger = getLogger("uvicorn.app")
 
 
-def generate_erd_for_datasource(db: Session, data_source_id: int, user_id: int):
+def generate_erd_for_datasource(db: Session, data_source_id: int, user_id: int) -> list[str]:
     logger.debug("Generating ERD for data source: %s", data_source_id)
     database_information_list = metadata_crud.get_database_information(db, data_source_id, user_id)
     erds = []

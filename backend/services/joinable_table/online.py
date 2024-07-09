@@ -1,7 +1,6 @@
 from logging import getLogger
 
 import pandas as pd
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from core.data_source_adapter.factory import DataSourceFactory
@@ -14,12 +13,18 @@ logger = getLogger("uvicorn.app")
 SCORE_THRESHOLD = 0.07
 
 
-def join_data(data_source_id: int, user_id: int, table_name: str, db: Session, threshold: float = SCORE_THRESHOLD):
+def join_data(
+    data_source_id: int,
+    user_id: int,
+    table_name: str,
+    db: Session,
+    threshold: float = SCORE_THRESHOLD,
+) -> tuple[pd.DataFrame, dict]:
     # get data from target data source
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
-        raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
+        raise Exception(f"DataSource ID: {data_source_id} not found")
 
     # create connection to data source
     factory = DataSourceFactory(

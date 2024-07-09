@@ -7,7 +7,7 @@ import pandas as pd
 from .data_matching import find_data_matching_among_df, find_schema_matching_among_df
 
 
-def find_schema_matching(target_name: str, target_file: BinaryIO, source_name: str, source_file: BinaryIO):
+def find_schema_matching(target_name: str, target_file: BinaryIO, source_name: str, source_file: BinaryIO) -> dict:
     target_df = pd.read_csv(target_file)
     source_df = pd.read_csv(source_file)
 

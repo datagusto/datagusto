@@ -67,7 +67,7 @@ def delete_database_information(db: Session, data_source_id: int, user_id: int) 
     return False
 
 
-def clear_database_table_information(db: Session):
+def clear_database_table_information(db: Session) -> bool:
     db.query(models.DatabaseInformation).delete()
     db.query(models.TableInformation).delete()
     db.commit()

@@ -66,7 +66,7 @@ class MySQLDataSource(DataSourceBase):
         self.close()
         return [table[0] for table in tables]
 
-    def get_all_columns(self):
+    def get_all_columns(self) -> dict:
         tables = self.get_all_tables()
         self.set_cursor()
         all_columns = {}

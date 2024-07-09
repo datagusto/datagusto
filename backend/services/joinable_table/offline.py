@@ -14,7 +14,7 @@ from .sub import flatten_concatenation, generate_text_from_data
 logger = getLogger("uvicorn.app")
 
 
-def indexing(data_source_id: int, user_id: int, db: Session):
+def indexing(data_source_id: int, user_id: int, db: Session) -> None:
     # TODO: this need to be triggered when new data source is added automatically
     # load tokenizer
     # model_path = "./models/model_ver1.0"

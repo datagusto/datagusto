@@ -1,21 +1,21 @@
 from logging import getLogger
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env")
 
-from database import models
-from database.database import engine
-from dependencies import get_current_user
-from endpoints.analysis import router as analysis_router
-from endpoints.common import router as common_router
-from endpoints.data_sources import router as data_sources_router
-from endpoints.joinable import router as joinable_router
-from endpoints.matching import router as matching_router
-from endpoints.metadata import router as metadata_router
-from endpoints.user import router as user_router
+from database import models  # noqa E402
+from database.database import engine  # noqa E402
+from dependencies import get_current_user  # noqa E402
+from endpoints.analysis import router as analysis_router  # noqa E402
+from endpoints.common import router as common_router  # noqa E402
+from endpoints.data_sources import router as data_sources_router  # noqa E402
+from endpoints.joinable import router as joinable_router  # noqa E402
+from endpoints.matching import router as matching_router  # noqa E402
+from endpoints.metadata import router as metadata_router  # noqa E402
+from endpoints.user import router as user_router  # noqa E402
 
 logger = getLogger("uvicorn.app")
 
@@ -38,7 +38,7 @@ app.add_middleware(
 
 
 @app.exception_handler(Exception)
-def exception_handler(request, exc):
+def exception_handler(request: Request, exc: Exception) -> dict[str, str]:
     logger.exception(exc)
     return {
         "message": "Internal Server Error",

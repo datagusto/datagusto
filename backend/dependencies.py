@@ -6,7 +6,7 @@ from database.database import SessionLocal
 from schemas.user import User
 
 
-def get_db():
+def get_db() -> Session:
     db = SessionLocal()
     try:
         yield db

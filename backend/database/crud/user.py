@@ -7,7 +7,7 @@ from schemas import user as user_schema
 from .. import models
 
 
-def get_user(db, username: str) -> Optional[user_schema.User]:
+def get_user(db: Session, username: str) -> Optional[user_schema.User]:
     user = db.query(models.User).filter(models.User.username == username).first()
     return user_schema.User(**user.__dict__) if user else None
 

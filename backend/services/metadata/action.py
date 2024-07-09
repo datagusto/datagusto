@@ -8,7 +8,6 @@ from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
 from database.crud import metadata as metadata_crud
 from schemas import metadata as metadata_schema
-from schemas.data_source import DataSource
 
 from ..common import encode_binary
 from .llm import generate_column_description, generate_docs_from_columns
@@ -16,7 +15,7 @@ from .llm import generate_column_description, generate_docs_from_columns
 logger = getLogger("uvicorn.app")
 
 
-def get_and_save_metadata(db: Session, data_source_id: int, user_id: int):
+def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> None:
     # get metadata to db
     logger.info("Getting metadata for data source: %s", data_source_id)
     tables_columns, database_name = _get_metadata(data_source_id, user_id, db)
@@ -53,7 +52,7 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int):
     vector_db_client.save(docs)
 
 
-def query_metadata(db: Session, query: str, user_id: int):
+def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
     factory = VectorDatabaseFactory()
     vector_db_client = factory.get_vector_database()
     result = vector_db_client.query(query, user_id=user_id, top_k=10)
@@ -93,9 +92,9 @@ def query_metadata(db: Session, query: str, user_id: int):
     return response
 
 
-def _get_metadata(data_source_id: int, user_id: int, db: Session):
+def _get_metadata(data_source_id: int, user_id: int, db: Session) -> tuple[dict, str]:
     logger.debug("Starting to get metadata from data source: data_source_id=%s", data_source_id)
-    data_source: DataSource = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
+    data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         raise Exception(f"DataSource ID: {data_source_id} not found")
@@ -118,7 +117,7 @@ def _get_metadata(data_source_id: int, user_id: int, db: Session):
     return all_columns, connection.get_database_name()
 
 
-def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_columns: dict, db: Session):
+def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_columns: dict, db: Session) -> None:
     # save to database
     logger.debug(
         "Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
@@ -154,7 +153,7 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     metadata_crud.create_database_information(db, database_information, user_id)
 
 
-def _get_sample_data_from_tables(db: Session, response: list, user_id: int):
+def _get_sample_data_from_tables(db: Session, response: list, user_id: int) -> list[dict]:
     # get sample data for each table
     for r in response:
         data_source_id = r["data_source_id"]
@@ -189,12 +188,12 @@ def _get_sample_data_from_tables(db: Session, response: list, user_id: int):
     return response
 
 
-def delete_metadata(db: Session, data_source_id: int, user_id: int):
+def delete_metadata(db: Session, data_source_id: int, user_id: int) -> None:
     logger.debug("Deleting metadata from the database. data_source_id=%s", data_source_id)
     metadata_crud.delete_database_information(db, data_source_id, user_id)
 
 
-def delete_all_metadata(db: Session):
+def delete_all_metadata(db: Session) -> None:
     logger.info("Clearing VectorDB")
     factory = VectorDatabaseFactory()
     vector_db_client = factory.get_vector_database()

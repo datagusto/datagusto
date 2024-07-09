@@ -18,7 +18,7 @@ def post_joinable_table_indexing(
     body: join_schema.JoinableTableIndexingCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> dict[str, str]:
     data_source_id = body.data_source_id
     logger.info("Indexing data source: %s", data_source_id)
 
@@ -32,7 +32,7 @@ def post_joinable_table_join_data(
     body: join_schema.JoinableTableJoinData,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> dict[str, str]:
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name

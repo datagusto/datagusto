@@ -4,7 +4,7 @@ from typing import Union
 from core.llm_adapter.factory import LlmFactory
 
 
-def encode_binary(value) -> Union[str, bytes]:
+def encode_binary(value: Union[str, bytes]) -> Union[str, bytes]:
     if isinstance(value, bytes):
         return base64.b64encode(value).decode("utf-8")
     else:
