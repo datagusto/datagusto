@@ -19,8 +19,6 @@ from endpoints.user import router as user_router  # noqa E402
 
 logger = getLogger("uvicorn.app")
 
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
 origins = [

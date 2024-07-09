@@ -1,4 +1,5 @@
 from logging import getLogger
+from typing import Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -32,7 +33,7 @@ def post_joinable_table_join_data(
     body: join_schema.JoinableTableJoinData,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> dict[str, str]:
+) -> dict[str, Union[str, dict, None]]:
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name

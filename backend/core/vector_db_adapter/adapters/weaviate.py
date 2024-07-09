@@ -12,7 +12,7 @@ from .base import VectorDatabaseBase
 WEAVIATE_CLASS_NAME = "Table_column_data"
 # WEAVIATE_PERSISTENT_STORAGE_PATH = "./db/weaviate_data"
 WEAVIATE_PERSISTENT_STORAGE_PATH = os.path.join(".", "db", "weaviate_data")
-WEAVIATE_DEFAULT_ENDPOINT = "http://weaviate:8080"
+WEAVIATE_DEFAULT_ENDPOINT = "http://weaviate:8005"
 
 METADATA_ATTRIBUTES = ["data_source_id", "database_name", "table_name", "column_name", "column_type"]
 

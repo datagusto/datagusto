@@ -4,7 +4,7 @@
 
 
 ### Prerequisites
-This project assumes you have installed `pipenv` and `python3.10`.
+This project assumes you have installed `pipenv` and `python3.9`.
 
 
 ### Install dependencies
