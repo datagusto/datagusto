@@ -5,8 +5,8 @@ from typing import Optional
 
 import pandas as pd
 
-from .base import DataSourceBase
 from ..config import FileConfig
+from .base import DataSourceBase
 
 logger = getLogger("uvicorn.app")
 

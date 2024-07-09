@@ -6,17 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env")
 
-from dependencies import get_current_user
 from database import models
 from database.database import engine
-
+from dependencies import get_current_user
+from endpoints.analysis import router as analysis_router
 from endpoints.common import router as common_router
-from endpoints.user import router as user_router
 from endpoints.data_sources import router as data_sources_router
-from endpoints.metadata import router as metadata_router
 from endpoints.joinable import router as joinable_router
 from endpoints.matching import router as matching_router
-from endpoints.analysis import router as analysis_router
+from endpoints.metadata import router as metadata_router
+from endpoints.user import router as user_router
 
 logger = getLogger("uvicorn.app")
 

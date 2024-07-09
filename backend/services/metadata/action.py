@@ -4,14 +4,14 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from core.data_source_adapter.factory import DataSourceFactory
-from schemas import metadata as metadata_schema
-
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
 from database.crud import metadata as metadata_crud
+from schemas import metadata as metadata_schema
 from schemas.data_source import DataSource
-from .llm import generate_docs_from_columns, generate_column_description
+
 from ..common import encode_binary
+from .llm import generate_column_description, generate_docs_from_columns
 
 logger = getLogger("uvicorn.app")
 

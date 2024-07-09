@@ -2,9 +2,10 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from .. import models
 from schemas import data_source as data_source_schema
 from schemas import metadata as metadata_schema
+
+from .. import models
 
 
 def get_data_source(db: Session, data_source_id: int, user_id: Optional[int]) -> data_source_schema.DataSource:

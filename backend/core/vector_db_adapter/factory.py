@@ -3,7 +3,7 @@ from logging import getLogger
 
 from .adapters.base import VectorDatabaseBase
 from .adapters.faiss import FaissDB
-from .adapters.weaviate import WeaviateServerDB, WeaviateEmbedDB
+from .adapters.weaviate import WeaviateEmbedDB, WeaviateServerDB
 
 logger = getLogger("uvicorn.app")
 

@@ -4,7 +4,7 @@ from typing import BinaryIO
 
 import pandas as pd
 
-from .data_matching import find_schema_matching_among_df, find_data_matching_among_df
+from .data_matching import find_data_matching_among_df, find_schema_matching_among_df
 
 
 def find_schema_matching(target_name: str, target_file: BinaryIO, source_name: str, source_file: BinaryIO):

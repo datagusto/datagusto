@@ -2,8 +2,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from .. import models
 from schemas import metadata as metadata_schema
+
+from .. import models
 
 
 def create_database_information(db: Session, database_information_create: metadata_schema.DatabaseInformationCreate, user_id: int) -> metadata_schema.DatabaseInformation:

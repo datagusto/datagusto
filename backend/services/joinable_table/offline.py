@@ -1,16 +1,16 @@
 from logging import getLogger
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
-
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
+from sqlalchemy.orm import Session
 
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
 from database.crud import metadata as metadata_crud
-from .sub import generate_text_from_data, flatten_concatenation
+
+from .sub import flatten_concatenation, generate_text_from_data
 
 logger = getLogger("uvicorn.app")
 

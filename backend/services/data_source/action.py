@@ -2,7 +2,7 @@ import base64
 import json
 import uuid
 from logging import getLogger
-from typing import Union, BinaryIO
+from typing import BinaryIO, Union
 
 import pandas as pd
 from sqlalchemy.orm import Session
@@ -10,9 +10,10 @@ from sqlalchemy.orm import Session
 from core.data_source_adapter.config import FileConfig
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
+from database.crud import data_source as data_source_crud
 from database.models import DataSource
 from schemas import data_source as data_source_schema
-from database.crud import data_source as data_source_crud
+
 from ..common import encode_binary
 
 logger = getLogger("uvicorn.app")

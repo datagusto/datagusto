@@ -3,8 +3,8 @@ from typing import Any
 
 import psycopg2
 
-from .base import DataSourceBase
 from ..config import PostgreSQLConfig
+from .base import DataSourceBase
 
 logger = getLogger("uvicorn.app")
 

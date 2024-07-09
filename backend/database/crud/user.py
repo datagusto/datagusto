@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from schemas import user as user_schema
+
 from .. import models
 
 

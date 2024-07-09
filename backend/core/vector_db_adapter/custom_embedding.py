@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, List, Optional
 
 from langchain_core.embeddings import Embeddings
 from langchain_core.pydantic_v1 import Extra, Field

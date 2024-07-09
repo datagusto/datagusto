@@ -44,7 +44,8 @@ sentencepiece = "*"
 oracledb = "*"
 
 [dev-packages]
-
+isort = "*"
+ruff = "*"
 
 [torch_cu121]
 accelerate = "*"

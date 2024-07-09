@@ -1,13 +1,14 @@
 from logging import getLogger
 
+import pandas as pd
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-import pandas as pd
 
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
-from .sub import generate_text_from_data, flatten_concatenation
+
+from .sub import flatten_concatenation, generate_text_from_data
 
 logger = getLogger("uvicorn.app")
 SCORE_THRESHOLD = 0.07

@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 THRESHOLD_NUNIQUE_SIZE = 2
 

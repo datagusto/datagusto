@@ -2,8 +2,8 @@ from logging import getLogger
 
 import mysql.connector
 
-from .base import DataSourceBase
 from ..config import MySQLConfig
+from .base import DataSourceBase
 
 logger = getLogger("uvicorn.app")
 

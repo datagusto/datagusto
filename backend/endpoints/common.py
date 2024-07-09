@@ -3,7 +3,7 @@ from logging import getLogger
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from dependencies import get_db, get_current_user
+from dependencies import get_current_user, get_db
 from schemas.common import QueryRequest
 from services.common import query_llm
 

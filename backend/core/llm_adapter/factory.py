@@ -1,7 +1,7 @@
 import os
 
-from .adapters.llm_base import LLMBase
 from .adapters.azureai_endpoint import AzureAIEndpoint
+from .adapters.llm_base import LLMBase
 from .adapters.llms import AzureOpenAILLM, OpenAILLM
 from .adapters.local_llm import LocalLLM
 

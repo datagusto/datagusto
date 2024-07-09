@@ -3,11 +3,15 @@ from logging import getLogger
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from dependencies import get_db, get_current_user
+from dependencies import get_current_user, get_db
 from schemas import metadata as metadata_schema
 from schemas.user import User
 from services.joinable_table.offline import indexing
-from services.metadata.action import get_and_save_metadata, query_metadata, delete_all_metadata
+from services.metadata.action import (
+    delete_all_metadata,
+    get_and_save_metadata,
+    query_metadata,
+)
 
 router = APIRouter()
 logger = getLogger("uvicorn.app")

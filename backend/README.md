@@ -1,10 +1,10 @@
 
 
-## Run backend
+## Backend Development related
 
 
 ### Prerequisites
-This project assumes you have installed `pipenv` and `python3.9`.
+This project assumes you have installed `pipenv` and `python3.10`.
 
 
 ### Install dependencies
@@ -31,8 +31,6 @@ cd datagusto/backend
 pipenv run uvicorn main:app --reload --log-config logging.yaml --timeout-keep-alive 3600
 ```
 
-## Development related
-
 ### Database migration
 
 ```shell
@@ -43,4 +41,16 @@ pipenv shell
 pipenv run alembic revision --autogenerate -m "generation version message"
 # apply the migration
 pipenv run alembic upgrade head
+```
+
+### Generate Pipfile.lock
+
+Start docker container, then run the following command.
+
+```shell
+# delete Pipfile.lock
+rm Pipfile.lock
+
+# generate Pipfile.lock
+pipenv install --categories="packages torch dev-packages"
 ```

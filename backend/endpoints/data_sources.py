@@ -1,15 +1,20 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Depends, HTTPException, Form, UploadFile, File, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
-from dependencies import get_db, get_current_user
+from dependencies import get_current_user, get_db
 from schemas import data_source as data_source_schema
 from schemas.user import User
-from services.data_source.action import get_sample_data_from_table, create_data_source, delete_data_source_by_id, \
-    create_data_source_from_file, test_data_source_connection
+from services.data_source.action import (
+    create_data_source,
+    create_data_source_from_file,
+    delete_data_source_by_id,
+    get_sample_data_from_table,
+    test_data_source_connection,
+)
 from services.metadata.action import delete_metadata
 
 router = APIRouter()

@@ -1,8 +1,9 @@
-import pandas as pd
 from logging import getLogger
+
+import pandas as pd
+from langchain_community.vectorstores.faiss import FAISS
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
-from langchain_community.vectorstores.faiss import FAISS
 
 from core.llm_adapter.factory import LlmFactory
 from core.vector_db_adapter.custom_embedding import CustomEmbedding

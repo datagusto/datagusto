@@ -3,8 +3,8 @@ from typing import Any
 
 import oracledb
 
-from .base import DataSourceBase
 from ..config import OracleConfig
+from .base import DataSourceBase
 
 logger = getLogger("uvicorn.app")
 

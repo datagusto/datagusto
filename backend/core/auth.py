@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
+from typing import Optional
+
 from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from typing import Optional
 
 from database.crud import user as user_crud
 from schemas.user import User

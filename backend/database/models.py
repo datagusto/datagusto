@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, Enum, JSON, ForeignKey
+from sqlalchemy import JSON, Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from database.database import Base
 from core.data_source_adapter.types import DataSourceType
+from database.database import Base
 
 
 class User(Base):
