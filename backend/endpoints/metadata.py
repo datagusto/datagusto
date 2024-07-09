@@ -18,8 +18,11 @@ logger = getLogger("uvicorn.app")
 
 
 @router.post("/")
-def req_get_metadata(model: metadata_schema.GetMetadata,
-                              current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def req_get_metadata(
+    model: metadata_schema.GetMetadata,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     get_and_save_metadata(db, model.data_source_id, current_user.id)
     # create joinable table index
     logger.info("Create joinable data index: %s", model.data_source_id)
@@ -28,8 +31,7 @@ def req_get_metadata(model: metadata_schema.GetMetadata,
 
 
 @router.get("/query/")
-def req_query_metadata(query: str, current_user: User = Depends(get_current_user),
-                       db: Session = Depends(get_db)):
+def req_query_metadata(query: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     response = query_metadata(db, query, current_user.id)
     return response
 

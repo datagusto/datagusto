@@ -42,11 +42,18 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     for database_information in database_information_list:
         for table_information in database_information.table_information:
             for column in table_information.table_info["columns"]:
-                logger.info("data_source_id: %s, table_name: %s, column_name: %s, column_type: %s",
-                            data_source_id, table_information.table_name, column["column_name"], column["column_type"])
+                logger.info(
+                    "data_source_id: %s, table_name: %s, column_name: %s, column_type: %s",
+                    data_source_id,
+                    table_information.table_name,
+                    column["column_name"],
+                    column["column_type"],
+                )
                 # skip unsupported column types
                 # TODO: check with the white list of supported column types instead of black list
-                if column["column_type"].startswith(("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob")):
+                if column["column_type"].startswith(
+                    ("timestamp", "geometry", "year", "decimal", "enum", "set", "datetime", "blob"),
+                ):
                     continue
                 # select column data
                 data = connection.select_column(table_information.table_name, column["column_name"], limit=1000)
@@ -57,16 +64,18 @@ def indexing(data_source_id: int, user_id: int, db: Session):
                 logger.info("text: %s", text[:50])
                 repository_texts.append(text)
 
-                docs.append(Document(
-                    page_content=text,
-                    metadata={
-                        "data_source_id": data_source_id,
-                        "user_id": user_id,
-                        "database_name": data_source.name,
-                        "table_name": table_information.table_name,
-                        "column_name": column["column_name"],
-                        "column_type": column["column_type"],
-                    }),
+                docs.append(
+                    Document(
+                        page_content=text,
+                        metadata={
+                            "data_source_id": data_source_id,
+                            "user_id": user_id,
+                            "database_name": data_source.name,
+                            "table_name": table_information.table_name,
+                            "column_name": column["column_name"],
+                            "column_type": column["column_type"],
+                        },
+                    ),
                 )
 
     # save index

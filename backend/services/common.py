@@ -10,6 +10,7 @@ def encode_binary(value) -> Union[str, bytes]:
     else:
         return value
 
+
 def query_llm(prompt: str) -> str:
     factory = LlmFactory()
     llm = factory.get_llm()

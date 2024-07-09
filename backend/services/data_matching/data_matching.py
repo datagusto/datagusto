@@ -86,13 +86,17 @@ def find_schema_matching_among_df(
     source_df: pd.DataFrame,
 ):
     logger.debug(
-        "Starting to find schema matching between %s and %s", target_name, source_name,
+        "Starting to find schema matching between %s and %s",
+        target_name,
+        source_name,
     )
     unique_columns_target, column_description_target = process_df(
-        target_name, target_df,
+        target_name,
+        target_df,
     )
     unique_columns_source, column_description_source = process_df(
-        source_name, source_df,
+        source_name,
+        source_df,
     )
 
     # find column matching
@@ -188,4 +192,3 @@ def find_data_matching_among_df(target_df: pd.DataFrame, source_df: pd.DataFrame
                 break
 
     return matched_list
-

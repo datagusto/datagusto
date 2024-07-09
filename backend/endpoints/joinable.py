@@ -14,8 +14,11 @@ logger = getLogger("uvicorn.app")
 
 
 @router.post("/indexing/")
-def post_joinable_table_indexing(body: join_schema.JoinableTableIndexingCreate,
-                                 current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def post_joinable_table_indexing(
+    body: join_schema.JoinableTableIndexingCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     data_source_id = body.data_source_id
     logger.info("Indexing data source: %s", data_source_id)
 
@@ -25,9 +28,11 @@ def post_joinable_table_indexing(body: join_schema.JoinableTableIndexingCreate,
 
 
 @router.post("/join_data/")
-def post_joinable_table_join_data(body: join_schema.JoinableTableJoinData,
-                                  current_user: User = Depends(get_current_user),
-                                  db: Session = Depends(get_db)):
+def post_joinable_table_join_data(
+    body: join_schema.JoinableTableJoinData,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name

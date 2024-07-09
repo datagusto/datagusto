@@ -14,7 +14,7 @@ lint_files=(
 pipenv run isort ${lint_files[@]}
 
 #ruff format
-#pipenv run ruff format ${lint_files[@]}
+pipenv run ruff format ${lint_files[@]}
 
 # ruff check
 pipenv run ruff check ${lint_files[@]} --fix

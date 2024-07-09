@@ -38,10 +38,15 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int):
     logger.info("Saving metadata to VectorDB")
     all_columns = []
     for table_name, columns in tables_columns.items():
-        all_columns.extend([
-            {
-                "table_name": table_name,
-            } | column for column in columns])
+        all_columns.extend(
+            [
+                {
+                    "table_name": table_name,
+                }
+                | column
+                for column in columns
+            ],
+        )
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id, user_id)
     factory = VectorDatabaseFactory()
     vector_db_client = factory.get_vector_database()
@@ -55,8 +60,11 @@ def query_metadata(db: Session, query: str, user_id: int):
     logger.info(f"Search result for {query} is : {result}")
 
     data_sources = {
-        r.metadata.get("data_source_id"): data_source_crud.get_data_source(db, r.metadata.get("data_source_id"),
-                                                                           user_id=user_id).name
+        r.metadata.get("data_source_id"): data_source_crud.get_data_source(
+            db,
+            r.metadata.get("data_source_id"),
+            user_id=user_id,
+        ).name
         for r in result
     }
 
@@ -67,7 +75,8 @@ def query_metadata(db: Session, query: str, user_id: int):
             "database_name": r.metadata.get("database_name"),
             "table_name": r.metadata.get("table_name"),
             "column_description": [r.page_content],
-        } for r in result
+        }
+        for r in result
     ]
 
     # Combine responses with the same table name
@@ -98,8 +107,11 @@ def _get_metadata(data_source_id: int, user_id: int, db: Session):
         connection=data_source.connection,
     )
     connection = factory.get_data_source()
-    logger.debug("Getting all column data (metadata) from the database. data_source_id=%s, database_name=%s",
-                 data_source_id, connection.get_database_name())
+    logger.debug(
+        "Getting all column data (metadata) from the database. data_source_id=%s, database_name=%s",
+        data_source_id,
+        connection.get_database_name(),
+    )
     all_columns = connection.get_all_columns()
     logger.debug(f"all_columns: {all_columns}")
 
@@ -108,8 +120,11 @@ def _get_metadata(data_source_id: int, user_id: int, db: Session):
 
 def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_columns: dict, db: Session):
     # save to database
-    logger.debug("Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
-                 data_source_id, database_name)
+    logger.debug(
+        "Generating database column instance to save to the database. data_source_id=%s, database_name=%s",
+        data_source_id,
+        database_name,
+    )
     database_information = metadata_schema.DatabaseInformationCreate(
         data_source_id=data_source_id,
         database_name=database_name,
@@ -117,20 +132,25 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     )
     table_information = []
     for table_name, columns in all_columns.items():
-        table_information.append(metadata_schema.TableInformationCreate(
-            data_source_id=data_source_id,
-            table_name=table_name,
-            table_info={
-                "database_name": database_name,
-                "schema_name": database_name,
-                "table_name": table_name,
-                "columns": columns,
-            },
-        ))
+        table_information.append(
+            metadata_schema.TableInformationCreate(
+                data_source_id=data_source_id,
+                table_name=table_name,
+                table_info={
+                    "database_name": database_name,
+                    "schema_name": database_name,
+                    "table_name": table_name,
+                    "columns": columns,
+                },
+            ),
+        )
     database_information.table_information = table_information
 
-    logger.debug("Saving database column information to the database. data_source_id=%s, database_name=%s",
-                 data_source_id, database_name)
+    logger.debug(
+        "Saving database column information to the database. data_source_id=%s, database_name=%s",
+        data_source_id,
+        database_name,
+    )
     metadata_crud.create_database_information(db, database_information, user_id)
 
 
