@@ -37,7 +37,7 @@ class DatabaseInformation(Base):
     data_source_id = Column('data_source_id', Integer, ForeignKey('data_source.id'))
     database_name = Column('database_name', String(100))
     schema_name = Column('schema_name', String(100))
-    table_information = relationship('TableInformation', back_populates='database_information')
+    table_information = relationship('TableInformation', back_populates='database_information', cascade="all, delete-orphan")
     deleted_at = Column(DateTime, default=None, nullable=True)
     created_at = Column(DateTime, default=datetime.now(), nullable=False)
     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)

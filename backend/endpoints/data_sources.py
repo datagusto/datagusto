@@ -64,6 +64,8 @@ def req_delete_data_source_by_id(data_source_id: int, current_user: User = Depen
     vector_db_client = factory.get_vector_database()
     logger.info("Deleting vectors for data source: %s", data_source_id)
     vector_db_client.delete_by_filter({"data_source_id": data_source_id})
+    vector_db_client_join = factory.get_vector_database_join()
+    vector_db_client_join.delete_by_filter({"data_source_id": data_source_id})
 
     delete_data_source_by_id(db, data_source_id, current_user.id)
     return {"message": "Data source deleted successfully"}

@@ -25,7 +25,7 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
-        return HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
+        return Exception(f"DataSource ID: {data_source_id} not found")
     
     # create connection to data source
     factory = DataSourceFactory(

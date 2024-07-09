@@ -53,7 +53,7 @@ class PostgreSQLDataSource(DataSourceBase):
         try:
             PostgreSQLConfig(**self.config)
         except Exception:
-            logger.exception("Invalid MySQL config: %s", self.config)
+            logger.exception("Invalid PostgreSQL config: %s", self.config)
             return False
         return True
 
@@ -61,7 +61,8 @@ class PostgreSQLDataSource(DataSourceBase):
         try:
             _connection = psycopg2.connect(**self.config)
             _connection.close()
-        except psycopg2.DatabaseError:
+        except psycopg2.DatabaseError as e:
+            logger.exception(e)
             return False
         return True
 
