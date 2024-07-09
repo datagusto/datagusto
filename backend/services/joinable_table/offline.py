@@ -1,6 +1,5 @@
 from logging import getLogger
 
-from fastapi import HTTPException
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
 from sqlalchemy.orm import Session
@@ -26,13 +25,13 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     if not data_source:
         logger.warning("data_source_id: %s not found", data_source_id)
         return Exception(f"DataSource ID: {data_source_id} not found")
-    
+
     # create connection to data source
     factory = DataSourceFactory(
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source()
 
@@ -66,8 +65,8 @@ def indexing(data_source_id: int, user_id: int, db: Session):
                         "database_name": data_source.name,
                         "table_name": table_information.table_name,
                         "column_name": column["column_name"],
-                        "column_type": column["column_type"]
-                    })
+                        "column_type": column["column_type"],
+                    }),
                 )
 
     # save index
@@ -76,7 +75,7 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     factory = VectorDatabaseFactory()
     vector_db_join_client = factory.get_vector_database_join()
     vector_db_join_client.save(docs)
-    
+
     # tokenize texts
     # inputs = tokenizer(repository_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
     # outputs = model(**inputs)
@@ -86,6 +85,6 @@ def indexing(data_source_id: int, user_id: int, db: Session):
     # # create faiss index
     # d = cls_token_vector.shape[1]
     # index = faiss.IndexFlatL2(d)
-    
+
     # # persist faiss index
     # faiss.write_index(index, "./db/faiss/{data_source_id}.index")

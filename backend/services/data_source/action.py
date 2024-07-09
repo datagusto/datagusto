@@ -1,15 +1,13 @@
-import base64
 import json
 import uuid
 from logging import getLogger
-from typing import BinaryIO, Union
+from typing import BinaryIO
 
 import pandas as pd
 from sqlalchemy.orm import Session
 
 from core.data_source_adapter.config import FileConfig
 from core.data_source_adapter.factory import DataSourceFactory
-from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
 from database.models import DataSource
 from schemas import data_source as data_source_schema
@@ -40,7 +38,7 @@ def create_data_source_from_file(db: Session, detail: str, file: BinaryIO, file_
 
     connection = FileConfig(
         file_type=detail_dict.get("file_type"),
-        saved_name=f"{uuid.uuid4().hex}.{file_type}"
+        saved_name=f"{uuid.uuid4().hex}.{file_type}",
     )
 
     data_source = data_source_schema.DataSourceCreate(**detail_dict, connection=connection.dict())
@@ -48,7 +46,7 @@ def create_data_source_from_file(db: Session, detail: str, file: BinaryIO, file_
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source_file()
 
@@ -64,7 +62,7 @@ def test_data_source_connection(data_source: data_source_schema.DataSourceCreate
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source()
     return connection.test_connection()
@@ -79,7 +77,7 @@ def get_sample_data_from_table(db: Session, data_source_id: int, table_name: str
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source()
     sample_data = connection.select_table(table_name, limit=5)

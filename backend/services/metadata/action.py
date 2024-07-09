@@ -40,7 +40,7 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int):
     for table_name, columns in tables_columns.items():
         all_columns.extend([
             {
-                "table_name": table_name
+                "table_name": table_name,
             } | column for column in columns])
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id, user_id)
     factory = VectorDatabaseFactory()
@@ -66,7 +66,7 @@ def query_metadata(db: Session, query: str, user_id: int):
             "data_source_name": data_sources[r.metadata.get("data_source_id")],
             "database_name": r.metadata.get("database_name"),
             "table_name": r.metadata.get("table_name"),
-            "column_description": [r.page_content]
+            "column_description": [r.page_content],
         } for r in result
     ]
 
@@ -95,7 +95,7 @@ def _get_metadata(data_source_id: int, user_id: int, db: Session):
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source()
     logger.debug("Getting all column data (metadata) from the database. data_source_id=%s, database_name=%s",
@@ -113,7 +113,7 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     database_information = metadata_schema.DatabaseInformationCreate(
         data_source_id=data_source_id,
         database_name=database_name,
-        schema_name=database_name
+        schema_name=database_name,
     )
     table_information = []
     for table_name, columns in all_columns.items():
@@ -124,8 +124,8 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
                 "database_name": database_name,
                 "schema_name": database_name,
                 "table_name": table_name,
-                "columns": columns
-            }
+                "columns": columns,
+            },
         ))
     database_information.table_information = table_information
 
@@ -146,7 +146,7 @@ def _get_sample_data_from_tables(db: Session, response: list, user_id: int):
                 adapter_name=data_source.type,
                 name=data_source.name,
                 description=data_source.description,
-                connection=data_source.connection
+                connection=data_source.connection,
             )
             connection = factory.get_data_source()
             table_information = data_source_crud.get_table(db, data_source_id, table_name, user_id)

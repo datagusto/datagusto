@@ -24,7 +24,7 @@ def find_schema_matching(target_name: str, target_file: BinaryIO, source_name: s
         "target_data_matched_columns": target_data_matched_columns,
         "source_data_columns": source_df.columns.tolist(),
         "source_data_matched_columns": source_data_matched_columns,
-        "matching": matching
+        "matching": matching,
     }
     return response
 

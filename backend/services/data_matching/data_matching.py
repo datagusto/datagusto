@@ -73,7 +73,7 @@ def process_df(name: str, df: pd.DataFrame):
         factory = LlmFactory()
         llm = factory.get_llm()
         r = llm.completion(
-            PROMPT_COLUMN_DESCRIPTION_TEMPLATE.format(TABLE_NAME=name, COLUMN_NAME=c)
+            PROMPT_COLUMN_DESCRIPTION_TEMPLATE.format(TABLE_NAME=name, COLUMN_NAME=c),
         )
         column_description.append(r)
     return unique_columns, column_description
@@ -86,13 +86,13 @@ def find_schema_matching_among_df(
     source_df: pd.DataFrame,
 ):
     logger.debug(
-        "Starting to find schema matching between %s and %s", target_name, source_name
+        "Starting to find schema matching between %s and %s", target_name, source_name,
     )
     unique_columns_target, column_description_target = process_df(
-        target_name, target_df
+        target_name, target_df,
     )
     unique_columns_source, column_description_source = process_df(
-        source_name, source_df
+        source_name, source_df,
     )
 
     # find column matching
@@ -109,7 +109,7 @@ def find_schema_matching_among_df(
                     ATTR_A_DESC=column_description_target[i],
                     ATTR_B_NAME=c_s,
                     ATTR_B_DESC=column_description_source[j],
-                )
+                ),
             )
 
             if r.startswith("Yes"):
@@ -121,12 +121,12 @@ def find_schema_matching_among_df(
 
 def entity_matching(record_a, record_b):
     attribute_list = ", ".join(list(record_a.keys()) + list(record_b.keys()))
-    record_a_str = ', '.join([f"{col}: {val}" for col, val in record_a.items()])
-    record_b_str = ', '.join([f"{col}: {val}" for col, val in record_b.items()])
+    record_a_str = ", ".join([f"{col}: {val}" for col, val in record_a.items()])
+    record_b_str = ", ".join([f"{col}: {val}" for col, val in record_b.items()])
     prompt = PROMPT_ENTITY_MATCHING_TEMPLATE.format(
         ATTRIBUTE_LIST=attribute_list,
         RECORD_A=record_a_str,
-        RECORD_B=record_b_str
+        RECORD_B=record_b_str,
     )
     factory = LlmFactory()
     llm = factory.get_llm()
@@ -147,13 +147,13 @@ def find_data_matching_among_df(target_df: pd.DataFrame, source_df: pd.DataFrame
             raw_documents = []
             for source_index, source_row in source_df.iterrows():
                 raw_documents.append(
-                    Document(page_content=source_row[source_key], metadata={"index": source_index})
+                    Document(page_content=source_row[source_key], metadata={"index": source_index}),
                 )
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
             documents = text_splitter.split_documents(raw_documents)
             # NOTE: Use naive FAISS class instead of FaissDB class for on-memory indexing
             db[source_key] = FAISS.from_documents(documents, CustomEmbedding())
-    
+
     # matching
     matched_source_index_set = set()
     matched_list = []
@@ -168,7 +168,7 @@ def find_data_matching_among_df(target_df: pd.DataFrame, source_df: pd.DataFrame
                     if score > 0.15:
                         break
                     retrieved_source_index_set.add(r.metadata["index"])
-        
+
         target_keys = list(matching.keys())
         target_record = target_row[target_keys]
         source_keys = list(db.keys())
@@ -186,7 +186,6 @@ def find_data_matching_among_df(target_df: pd.DataFrame, source_df: pd.DataFrame
                 matched_source_index_set.add(source_index)
                 matched_list.append((target_index, source_index))
                 break
-    
+
     return matched_list
-            
-            
+

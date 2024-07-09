@@ -42,7 +42,7 @@ def exception_handler(request, exc):
     logger.exception(exc)
     return {
         "message": "Internal Server Error",
-        "detail": str(exc)
+        "detail": str(exc),
     }, 200
 
 

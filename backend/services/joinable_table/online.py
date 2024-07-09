@@ -26,7 +26,7 @@ def join_data(data_source_id: int, user_id: int, table_name: str, db: Session, t
         adapter_name=data_source.type,
         name=data_source.name,
         description=data_source.description,
-        connection=data_source.connection
+        connection=data_source.connection,
     )
     connection = factory.get_data_source()
 
@@ -98,7 +98,7 @@ def join_data(data_source_id: int, user_id: int, table_name: str, db: Session, t
             adapter_name=target_data_source.type,
             name=target_data_source.name,
             description=target_data_source.description,
-            connection=target_data_source.connection
+            connection=target_data_source.connection,
         )
         target_connection = factory.get_data_source()
         for target_table_name in joinable_info[target_data_source_id]:

@@ -24,11 +24,11 @@ def get_database_information(db: Session, data_source_id: int, user_id: Optional
     if user_id:
         database_information = db.query(models.DatabaseInformation).filter(
             models.DatabaseInformation.data_source_id == data_source_id,
-            models.DatabaseInformation.owner_id == user_id
+            models.DatabaseInformation.owner_id == user_id,
         ).all()
         return [metadata_schema.DatabaseInformation.from_orm(database) for database in database_information]
     database_information = db.query(models.DatabaseInformation).filter(
-        models.DatabaseInformation.data_source_id == data_source_id
+        models.DatabaseInformation.data_source_id == data_source_id,
     ).all()
     return [metadata_schema.DatabaseInformation.from_orm(database) for database in database_information]
 
@@ -36,7 +36,7 @@ def get_database_information(db: Session, data_source_id: int, user_id: Optional
 def delete_database_information(db: Session, data_source_id: int, user_id: int) -> bool:
     database_information = db.query(models.DatabaseInformation).filter(
         models.DatabaseInformation.data_source_id == data_source_id,
-        models.DatabaseInformation.owner_id == user_id
+        models.DatabaseInformation.owner_id == user_id,
     ).first()
     if database_information:
         db.delete(database_information)

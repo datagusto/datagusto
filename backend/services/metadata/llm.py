@@ -26,7 +26,7 @@ def generate_column_description(column_info: dict, table_name) -> str:
 
     _full_prompt = prompt.format(
         TABLE_NAME=table_name,
-        COLUMN_DETAILS=column_data
+        COLUMN_DETAILS=column_data,
     )
 
     factory = LlmFactory()
@@ -48,7 +48,7 @@ def generate_docs_from_columns(all_columns: list[dict], database_name: str, data
             "database_name": database_name,
             "table_name": x.get("table_name"),
             "column_name": x.get("column_name"),
-            "column_type": x.get("column_type")
+            "column_type": x.get("column_type"),
         }) for x in all_columns]
     logger.debug("VectorDB log: Splitting documents")
     docs = text_splitter.split_documents(documents)

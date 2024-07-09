@@ -1,8 +1,7 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 
 from schemas import matching_table as matching_schema
 from services.data_matching.action import find_data_matching, find_schema_matching
@@ -12,7 +11,7 @@ logger = getLogger("uvicorn.app")
 
 
 @router.post("/find_schema/", response_model=matching_schema.SchemaMatchingResult)
-def req_find_schema_matching(target_file: UploadFile = File(...), source_file: UploadFile = File(...), ) -> dict:
+def req_find_schema_matching(target_file: UploadFile = File(...), source_file: UploadFile = File(...) ) -> dict:
     response = find_schema_matching(target_file.filename, target_file.file, source_file.filename, source_file.file)
     return response
 

@@ -12,7 +12,7 @@ def get_data_source(db: Session, data_source_id: int, user_id: Optional[int]) ->
     if user_id:
         data_source = db.query(models.DataSource).filter(
             models.DataSource.id == data_source_id,
-            models.DataSource.owner_id == user_id
+            models.DataSource.owner_id == user_id,
         ).first()
         return data_source_schema.DataSource.from_orm(data_source) if data_source else None
     data_source = db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
@@ -23,7 +23,7 @@ def get_data_sources(db: Session, user_id: Optional[int], skip: int = 0, limit: 
     data_source_schema.DataSource]:
     if user_id:
         data_sources = db.query(models.DataSource).filter(
-            models.DataSource.owner_id == user_id
+            models.DataSource.owner_id == user_id,
         ).offset(skip).limit(limit).all()
         return [data_source_schema.DataSource.from_orm(data_source) for data_source in data_sources]
     data_sources = db.query(models.DataSource).offset(skip).limit(limit).all()
@@ -42,7 +42,7 @@ def create_data_source(db: Session, data_source: data_source_schema.DataSourceCr
 def delete_data_source(db: Session, data_source_id: int, user_id: int) -> bool:
     data_source = db.query(models.DataSource).filter(
         models.DataSource.id == data_source_id,
-        models.DataSource.owner_id == user_id
+        models.DataSource.owner_id == user_id,
     ).first()
     if data_source:
         db.delete(data_source)
@@ -57,11 +57,11 @@ def get_table(db: Session, data_source_id: int, table_name: str, user_id: Option
         table = db.query(models.TableInformation).filter(
             models.TableInformation.data_source_id == data_source_id,
             models.TableInformation.table_name == table_name,
-            models.TableInformation.owner_id == user_id
+            models.TableInformation.owner_id == user_id,
         ).first()
         return metadata_schema.TableInformation.from_orm(table) if table else None
     table = db.query(models.TableInformation).filter(
         models.TableInformation.data_source_id == data_source_id,
-        models.TableInformation.table_name == table_name
+        models.TableInformation.table_name == table_name,
     ).first()
     return metadata_schema.TableInformation.from_orm(table) if table else None
