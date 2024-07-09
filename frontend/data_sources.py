@@ -174,36 +174,14 @@ def view_data_source_form(ds_id):
         st.form_submit_button("Save Changes", on_click=save_data_source_changes, disabled=True)
 
 
-def test_connection(dtype, username, password, hostname, port, database_name):
-    password = quote_plus(password)
-    """Attempt to connect to the database and return the result."""
-    # Construct the connection string
-    if dtype == "mysql":
-        engine_string = f"mysql+pymysql://{username}:{password}@{hostname}:{port}/{database_name}?connect_timeout=10"
-    elif dtype == "postgresql":
-        engine_string = f"postgresql+psycopg2://{username}:{password}@{hostname}:{port}/{database_name}?connect_timeout=10"
-    else:
-        return "Unsupported database type"
-
-    try:
-        # Attempt to create an engine and connect to the database
-        engine = sqlalchemy.create_engine(engine_string)
-        with engine.connect() as conn:
-            # If connection is successful
-            return "Success"
-    except SQLAlchemyError as e:
-        # If there is an error connecting to the database
-        return str(e)
-
-
 # Function to update the port based on database type selection
 def get_default_port(db_type):
-    port = 3306
-    if db_type == "postgresql":
-        port = 5432
-    elif db_type == "oracle":
-        port = 1521
-    return port
+    DEFAULT_PORTS = {
+        "mysql": 3306,
+        "postgresql": 5432,
+        "oracle": 1521
+    }
+    return DEFAULT_PORTS.get(db_type, 3306)
 
 
 def add_data_source_form(default_port, selected_db_type):
@@ -253,6 +231,36 @@ def add_data_source_form(default_port, selected_db_type):
         if test_button or submit_button:
             if missing_fields:
                 st.error(f"Missing mandatory field(s): {', '.join(missing_fields)}")
+
+        if test_button and not missing_fields:
+            with st.spinner():
+                if dtype == "file":
+                    connection = {}
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
+                if dtype in ["mysql", "postgresql", "oracle"]:
+                    connection = {
+                        "host": hostname,
+                        "port": port,
+                        "username": username,
+                        "password": password,
+                        "database": database_name
+                    }
+                    if dtype in ["postgresql", "oracle"]:
+                        connection["schema"] = schema
+                        connection["dbname"] = connection.pop("database")
+                        connection["user"] = connection.pop("username")
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
+
+                status_code = result.pop("status_code", 200)
+
+                if status_code != 200:
+                    st.error(f"Error testing data source:\n\n{result}")
+                else:
+                    status = result.get("result", False)
+                    if status:
+                        st.success("Connection successful!")
+                    else:
+                        st.error("Connection failed!")
 
         if submit_button and not missing_fields:
             with st.status("In progress... (this may take a while)"):

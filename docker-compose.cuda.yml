@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.cuda
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
