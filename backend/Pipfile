@@ -18,11 +18,6 @@ url = "https://download.pytorch.org/whl/cu121"
 verify_ssl = true
 name = "torch_cu12.1"
 
-[[source]]
-url = "https://download.pytorch.org/whl/cu118"
-verify_ssl = true
-name = "torch_cu11.8"
-
 [packages]
 fastapi = "*"
 uvloop = {version = "*", markers = "sys_platform == 'linux' or sys_platform == 'linux2' or sys_platform == 'darwin'"}
@@ -32,7 +27,7 @@ alembic = "*"
 pyyaml = "*"
 mysql-connector-python = "*"
 langchain = "*"
-weaviate-client = "*"
+weaviate-client = "3.*"
 langchain-openai = "*"
 pytz = "*"
 python-dotenv = "*"
@@ -49,28 +44,18 @@ sentencepiece = "*"
 oracledb = "*"
 
 [dev-packages]
-
-[torch_cu118]
-accelerate = "*"
-sentence-transformers = "*"
-torch = {version = "2.2.2", index = "torch_cu11.8"}
-flash-attn = "*"
+isort = "*"
+ruff = "*"
 
 [torch_cu121]
 accelerate = "*"
 sentence-transformers = "*"
-torch = {version = "2.2.2", index = "torch_cu12.1"}
-flash-attn = "*"
+torch = {version = "*", index = "torch_cu12.1"}
 
 [torch]
 accelerate = "*"
 sentence-transformers = "*"
-torch = {version = "2.2.2", index = "torch"}
-
-[torch_mps]
-accelerate = "*"
-sentence-transformers = "*"
-torch = {index = "torch"}
+torch = {version = "*", index = "torch"}
 
 [requires]
 python_version = "3.9"

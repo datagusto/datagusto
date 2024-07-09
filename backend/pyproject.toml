@@ -1,0 +1,66 @@
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.ruff]
+lint.select = [
+    "INP001",   # implicit-namespace-package
+    "C9",       # Complexity, McCabe
+    "C",        # pylint conventions
+    "F",        # Fixable errors, Pyflakes
+    "E",        # Errors, pycodestyle
+    "W",        # Warning, pycodestyle
+    "I",        # isort
+    "N",        # pep8-naming
+    "COM",      # flake8-commas
+    "B",        # flake8-bugbear
+    "T",        # flake8-bandit
+    "S",        # flake8-string-format
+    "Q",        # flake8-quotes
+    "TID",      # flake8-tidy-imports
+    "TCH",      # flake8-type-checking
+    "RUF",      # ruff specific rules
+    "ANN",      # flake80-annotations
+]
+lint.ignore = [
+    "ERA001",   # Found commented-out code
+    "RET504",   # Unnecessary assignment to `input_str` before `return` statement
+    "TRY003",   # Avoid specifying long messages outside the exception class
+    "C901",     # `query_workspace_open_search` is too complex (28 > 10)
+    "TID252",   # Prefer absolute imports over relative imports from parent modules
+    "ANN101",   # Missing type annotation for `self` in method
+    "ANN102",   # Missing type annotation for `cls` in classmethod
+#    "B008",     # Do not perform function call `Depends` in argument defaults;
+]
+include = [
+    "pyproject.toml",
+    "./core/",
+    "./database/**/*.py",
+    "./endpoints/**/*.py",
+    "./schemas/**/*.py",
+    "./services/**/*.py",
+    "./dependencies.py",
+    "./main.py",
+]
+
+# black compatibility
+line-length = 120
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.params.Depends",
+    "fastapi.Query",
+    "fastapi.params.Query",
+    "fastapi.Path",
+    "fastapi.params.Path",
+    "fastapi.Header",
+    "fastapi.params.Header",
+    "fastapi.Form",
+    "fastapi.params.Form",
+    "fastapi.File",
+    "fastapi.params.File",
+]
+
+[tool.ruff.format]
+quote-style = "double"

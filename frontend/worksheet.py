@@ -3,9 +3,9 @@ import json
 import pandas as pd
 
 from auth import get_user_name
-from data_sources import get_data_source, show_select_data_source_dropdown
+from data_sources import get_data_source
 from models import Worksheet
-from integration.connection import sync_metadata, query_metadata, join_data, get_table_data
+from integration.connection import query_metadata, join_data, get_table_data
 
 
 def save_worksheet(worksheet_name, prompt, data_source_id, username):
@@ -33,10 +33,11 @@ def save_worksheet(worksheet_name, prompt, data_source_id, username):
     finally:
         pass
 
-def list_worksheets():
-    worksheets = None
 
-    if not worksheets:
+def list_worksheets():
+    worksheets = []
+
+    if len(worksheets) == 0:
         st.write("No worksheets have been added yet.")
         return
 
@@ -196,21 +197,22 @@ def get_metadata_form():
         st.write("### Results")
         st.write(f"{len(found_tables)} relevant data were found.")
         for i, t in enumerate(found_tables):
-            with st.container(border=True):
-                st.write(f"##### {t['table_name']}")
-                st.caption(f'Location: {t["data_source_name"]} / {t["database_name"]} / {t["table_name"]}')
-                # show sample data
-                st.write("**Data preview:**")
-                df = pd.read_json(t["sample_data"], orient="records")
-                st.dataframe(df)
+            if "sample_data" in t:
+                with st.container(border=True):
+                    st.write(f"##### {t['table_name']}")
+                    st.caption(f'Location: {t["data_source_name"]} / {t["database_name"]} / {t["table_name"]}')
+                    # show sample data
+                    st.write("**Data preview:**")
+                    df = pd.read_json(t["sample_data"], orient="records")
+                    st.dataframe(df)
 
-                # Download whole data (limit to 1000 records)
-                st.download_button(
-                    label="Download",
-                    data=create_download_data(data_source_id=t['data_source_id'], table_name=t['table_name']),
-                    file_name=f"{t['table_name']}.csv",
-                    mime='text/csv',
-                )
+                    # Download whole data (limit to 1000 records)
+                    st.download_button(
+                        label="Download",
+                        data=create_download_data(data_source_id=t['data_source_id'], table_name=t['table_name']),
+                        file_name=f"{t['table_name']}.csv",
+                        mime='text/csv',
+                    )
                 
 
         options = list(range(len(found_tables)))

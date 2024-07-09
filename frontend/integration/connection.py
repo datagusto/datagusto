@@ -16,6 +16,25 @@ def get_data_sources():
     return response.json()
 
 
+def test_data_source_connection(
+        name: str,
+        type: str,
+        description: str,
+        connection: dict
+):
+    path = "data_sources/test_connection/"
+    payload = {
+        "name": name,
+        "type": type,
+        "description": description,
+        "connection": connection
+    }
+    response = post_request(path, payload)
+    response_dict = response.json()
+    response_dict["status_code"] = response.status_code
+    return response_dict
+
+
 def create_data_source(
         name: str,
         type: str,
@@ -93,7 +112,7 @@ def query_metadata(query: str):
 
 
 def join_data(data_source_id, table_name):
-    path = "joinable_table/join_data/"
+    path = "joinable/join_data/"
     payload = {
         "data_source_id": data_source_id,
         "table_name": table_name
@@ -113,7 +132,7 @@ def get_table_data(data_source_id, table_name, limit=1000):
 
 
 def post_find_schema_matching(target_file, source_file):
-    path = "find_schema_matching/"
+    path = "matching/find_schema/"
     files = {
         "target_file": (target_file.name, target_file, "text/csv"),
         "source_file": (source_file.name, source_file, "text/csv")
@@ -127,7 +146,7 @@ def post_find_schema_matching(target_file, source_file):
 
 
 def post_find_data_matching(target_file, source_file, matching):
-    path = "find_data_matching/"
+    path = "matching/find_data/"
     files = {
         "target_file": (target_file.name, target_file, "text/csv"),
         "source_file": (source_file.name, source_file, "text/csv")
@@ -140,7 +159,7 @@ def post_find_data_matching(target_file, source_file, matching):
 
 
 def post_generate_erd(data_source_id):
-    path = f"data_sources/{data_source_id}/erd/"
+    path = f"analysis/erd/{data_source_id}"
     response = post_request(path, {})
     response_dict = response.json()
     response_dict["status_code"] = response.status_code
