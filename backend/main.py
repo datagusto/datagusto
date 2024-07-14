@@ -6,16 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv(dotenv_path=".env")
 
-from database import models  # noqa E402
-from database.database import engine  # noqa E402
 from dependencies import get_current_user  # noqa E402
-from endpoints.analysis import router as analysis_router  # noqa E402
-from endpoints.common import router as common_router  # noqa E402
-from endpoints.data_sources import router as data_sources_router  # noqa E402
-from endpoints.joinable import router as joinable_router  # noqa E402
-from endpoints.matching import router as matching_router  # noqa E402
-from endpoints.metadata import router as metadata_router  # noqa E402
-from endpoints.user import router as user_router  # noqa E402
+from endpoints import analysis, common, data_sources, joinable, matching, metadata, user  # noqa E402
 
 logger = getLogger("uvicorn.app")
 
@@ -36,7 +28,7 @@ app.add_middleware(
 
 
 @app.exception_handler(Exception)
-def exception_handler(request: Request, exc: Exception) -> dict[str, str]:
+def exception_handler(request: Request, exc: Exception) -> tuple[dict[str, str], int]:
     logger.exception(exc)
     return {
         "message": "Internal Server Error",
@@ -44,10 +36,10 @@ def exception_handler(request: Request, exc: Exception) -> dict[str, str]:
     }, 200
 
 
-app.include_router(common_router, prefix="/common")
-app.include_router(user_router, prefix="/user")
-app.include_router(data_sources_router, prefix="/data_sources", dependencies=[Depends(get_current_user)])
-app.include_router(metadata_router, prefix="/metadata", dependencies=[Depends(get_current_user)])
-app.include_router(joinable_router, prefix="/joinable", dependencies=[Depends(get_current_user)])
-app.include_router(matching_router, prefix="/matching", dependencies=[Depends(get_current_user)])
-app.include_router(analysis_router, prefix="/analysis", dependencies=[Depends(get_current_user)])
+app.include_router(common.router, prefix="/common")
+app.include_router(user.router, prefix="/user")
+app.include_router(data_sources.router, prefix="/data_sources", dependencies=[Depends(get_current_user)])
+app.include_router(metadata.router, prefix="/metadata", dependencies=[Depends(get_current_user)])
+app.include_router(joinable.router, prefix="/joinable", dependencies=[Depends(get_current_user)])
+app.include_router(matching.router, prefix="/matching", dependencies=[Depends(get_current_user)])
+app.include_router(analysis.router, prefix="/analysis", dependencies=[Depends(get_current_user)])

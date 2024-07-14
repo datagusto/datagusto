@@ -9,6 +9,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserBase(BaseModel):
     username: str
+    tenant_id: Optional[int] = None
 
 
 class UserCreate(UserBase):

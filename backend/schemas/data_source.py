@@ -20,6 +20,7 @@ class DataSourceCreate(DataSourceBase):
 class DataSource(DataSourceBase):
     id: int
     owner_id: int
+    tenant_id: Optional[int] = None
     deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
