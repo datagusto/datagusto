@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv(dotenv_path=".env")
 
 from dependencies import get_current_user  # noqa E402
-from endpoints import analysis, common, data_sources, joinable, matching, metadata, user  # noqa E402
+from endpoints import analysis, common, data_sources, joinable, matching, metadata, user, resource_access  # noqa E402
 
 logger = getLogger("uvicorn.app")
 
@@ -43,3 +43,4 @@ app.include_router(metadata.router, prefix="/metadata", dependencies=[Depends(ge
 app.include_router(joinable.router, prefix="/joinable", dependencies=[Depends(get_current_user)])
 app.include_router(matching.router, prefix="/matching", dependencies=[Depends(get_current_user)])
 app.include_router(analysis.router, prefix="/analysis", dependencies=[Depends(get_current_user)])
+app.include_router(resource_access.router, prefix="/resource_access", dependencies=[Depends(get_current_user)])

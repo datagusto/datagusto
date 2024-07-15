@@ -39,7 +39,7 @@ class ResourceAccess(Base):
     owner_id = Column("owner_id", Integer, ForeignKey("user.id"))
     user_id = Column("user_id", Integer, ForeignKey("user.id"), nullable=True, default=None)
     tenant_id = Column("tenant_id", Integer, nullable=True, default=None)
-    resource_id = Column("data_source_id", Integer, ForeignKey("data_source.id"))
+    resource_id = Column("resource_id", Integer, ForeignKey("data_source.id"))
     resource_type = Column("resource_type", Enum(ResourceType))
     permission = Column("permission", Enum(PermissionType))
     created_at = Column(DateTime, default=datetime.now(), nullable=False)

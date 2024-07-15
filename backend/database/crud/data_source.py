@@ -91,10 +91,9 @@ def get_table(
     table = (
         db.query(models.TableInformation)
         .filter(
-            and_(
             models.TableInformation.data_source_id == data_source_id,
             models.TableInformation.table_name == table_name,
-            models.TableInformation.owner_id == user_id,)
+            models.TableInformation.owner_id == user_id,
         )
         .first()
     )

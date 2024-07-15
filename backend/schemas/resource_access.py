@@ -11,8 +11,8 @@ class ResourceAccessBase(BaseModel):
     user_id: Optional[int] = None
     tenant_id: Optional[int] = None
     resource_id: int
-    resource_type: ResourceType
-    permission: PermissionType
+    resource_type: ResourceType = ResourceType.DataSource
+    permission: PermissionType = PermissionType.Read
 
 
 class ResourceAccessCreate(ResourceAccessBase):
