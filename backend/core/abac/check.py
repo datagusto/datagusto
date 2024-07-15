@@ -3,8 +3,11 @@ import itertools
 from sqlalchemy.orm import Session
 
 from database import models
-from database.crud.resource_access import get_resource_access_by_access_user, \
-    get_resource_access_list
+from database.crud.resource_access import (
+    get_resource_access_by_access_user,
+    get_resource_access_list,
+)
+
 from .types import PermissionType
 
 

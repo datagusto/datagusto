@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from database.crud.resource_access import create_resource_access, delete_resource_access
 from dependencies import get_current_user, get_db
-from schemas.user import User
 from schemas import resource_access as resource_access_schema
+from schemas.user import User
 
 router = APIRouter()
 logger = getLogger("uvicorn.app")

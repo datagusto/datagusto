@@ -1,4 +1,4 @@
-from operator import or_, and_
+from operator import and_, or_
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -19,8 +19,9 @@ def get_data_source(db: Session, data_source_id: int, user_id: int) -> data_sour
         db.query(models.DataSource)
         .filter(
             and_(
-            models.DataSource.id == data_source_id,
-            models.DataSource.owner_id == user_id,)
+                models.DataSource.id == data_source_id,
+                models.DataSource.owner_id == user_id,
+            ),
         )
         .first()
     )
@@ -36,12 +37,7 @@ def get_data_sources(
     accessible_resource_ids = get_accessible_resource_ids(db, user_id)
     data_sources = (
         db.query(models.DataSource)
-        .filter(
-            or_(
-                models.DataSource.owner_id == user_id,
-                models.DataSource.id.in_(accessible_resource_ids)
-            )
-        )
+        .filter(or_(models.DataSource.owner_id == user_id, models.DataSource.id.in_(accessible_resource_ids)))
         .offset(skip)
         .limit(limit)
         .all()
@@ -68,8 +64,9 @@ def delete_data_source(db: Session, data_source_id: int, user_id: int) -> bool:
         db.query(models.DataSource)
         .filter(
             and_(
-            models.DataSource.id == data_source_id,
-            models.DataSource.owner_id == user_id,)
+                models.DataSource.id == data_source_id,
+                models.DataSource.owner_id == user_id,
+            ),
         )
         .first()
     )

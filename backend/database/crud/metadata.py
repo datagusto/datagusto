@@ -42,8 +42,9 @@ def get_database_information(
         db.query(models.DatabaseInformation)
         .filter(
             and_(
-            models.DatabaseInformation.data_source_id == data_source_id,
-            models.DatabaseInformation.owner_id == user_id,)
+                models.DatabaseInformation.data_source_id == data_source_id,
+                models.DatabaseInformation.owner_id == user_id,
+            ),
         )
         .all()
     )
