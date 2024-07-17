@@ -1,4 +1,4 @@
-from operator import and_, or_
+from operator import or_
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -15,16 +15,7 @@ def get_data_source(db: Session, data_source_id: int, user_id: int) -> data_sour
     if check_access(db, user_id, data_source_id, PermissionType.Read) is False:
         raise Exception("Access Denied")
 
-    data_source = (
-        db.query(models.DataSource)
-        .filter(
-            and_(
-                models.DataSource.id == data_source_id,
-                models.DataSource.owner_id == user_id,
-            ),
-        )
-        .first()
-    )
+    data_source = db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
     return data_source_schema.DataSource.from_orm(data_source) if data_source else None
 
 
@@ -63,10 +54,7 @@ def delete_data_source(db: Session, data_source_id: int, user_id: int) -> bool:
     data_source = (
         db.query(models.DataSource)
         .filter(
-            and_(
-                models.DataSource.id == data_source_id,
-                models.DataSource.owner_id == user_id,
-            ),
+            models.DataSource.id == data_source_id,
         )
         .first()
     )
@@ -90,7 +78,6 @@ def get_table(
         .filter(
             models.TableInformation.data_source_id == data_source_id,
             models.TableInformation.table_name == table_name,
-            models.TableInformation.owner_id == user_id,
         )
         .first()
     )

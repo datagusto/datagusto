@@ -7,7 +7,6 @@ from core.abac.types import PermissionType, ResourceType
 
 
 class ResourceAccessBase(BaseModel):
-    owner_id: int
     user_id: Optional[int] = None
     tenant_id: Optional[int] = None
     resource_id: int
@@ -21,6 +20,7 @@ class ResourceAccessCreate(ResourceAccessBase):
 
 class ResourceAccess(ResourceAccessBase):
     id: int
+    owner_id: int
     created_at: datetime
     updated_at: datetime
 

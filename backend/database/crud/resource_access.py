@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from sqlalchemy.orm import Query, Session
 
@@ -11,11 +11,12 @@ from .. import models
 def get_filtered_resource_access_query(db: Session, filters: Dict[str, Optional[int]]) -> Query:
     query = db.query(models.ResourceAccess)
     for key, value in filters.items():
-        query = query.filter(
-            getattr(models.ResourceAccess, key).is_(value)
-            if value is None
-            else getattr(models.ResourceAccess, key) == value,
-        )
+        if value is None:
+            query = query.filter(getattr(models.ResourceAccess, key).is_(value))
+        elif isinstance(value, list):
+            query = query.filter(getattr(models.ResourceAccess, key).in_(value))
+        else:
+            query = query.filter(getattr(models.ResourceAccess, key) == value)
     return query
 
 
@@ -24,7 +25,7 @@ def get_resource_access_by_owner_id(
     owner_id: int,
     resource_id: int,
     resource_type: ResourceType = ResourceType.DataSource,
-    action: PermissionType = PermissionType.Read,
+    action: Union[PermissionType, list[PermissionType]] = PermissionType.Read,
 ) -> Optional[resource_access_schema.ResourceAccess]:
     filters = {"owner_id": owner_id, "resource_id": resource_id, "resource_type": resource_type, "permission": action}
     resource_access = get_filtered_resource_access_query(db, filters).first()
@@ -64,8 +65,9 @@ def get_resource_access_by_access_user(
 def create_resource_access(
     db: Session,
     resource_access: resource_access_schema.ResourceAccessCreate,
+    owner_id: int,
 ) -> resource_access_schema.ResourceAccess:
-    new_resource_access = models.ResourceAccess(**resource_access.dict())
+    new_resource_access = models.ResourceAccess(**resource_access.dict(), owner_id=owner_id)
     db.add(new_resource_access)
     db.commit()
     db.refresh(new_resource_access)
@@ -80,6 +82,27 @@ def delete_resource_access(
     permission: PermissionType = PermissionType.Read,
 ) -> Optional[resource_access_schema.ResourceAccess]:
     filters = {"owner_id": owner_id, "id": id, "resource_type": resource_type, "permission": permission}
+    resource_access = get_filtered_resource_access_query(db, filters).first()
+    if resource_access:
+        db.delete(resource_access)
+        db.commit()
+        return resource_access_schema.ResourceAccess.from_orm(resource_access)
+    return None
+
+
+def delete_resource_access_by_resource_id(
+    db: Session,
+    owner_id: int,
+    resource_id: int,
+    resource_type: ResourceType = ResourceType.DataSource,
+    permission: PermissionType = PermissionType.Read,
+) -> Optional[resource_access_schema.ResourceAccess]:
+    filters = {
+        "owner_id": owner_id,
+        "resource_id": resource_id,
+        "resource_type": resource_type,
+        "permission": permission,
+    }
     resource_access = get_filtered_resource_access_query(db, filters).first()
     if resource_access:
         db.delete(resource_access)

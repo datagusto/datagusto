@@ -16,6 +16,31 @@ def get_data_sources():
     return response.json()
 
 
+def get_access_policy(data_source_id: int):
+    path = f"resource_access/tenant_shared/{data_source_id}"
+    response = get_request(path)
+    return response.json() if response else None
+
+
+def add_access_policy(data_source_id: int):
+    path = "resource_access/"
+    payload = {
+        "user_id": None,
+        "tenant_id": None,
+        "resource_id": data_source_id,
+        "resource_type": "data_source",
+        "permission": "read",
+    }
+    response = post_request(path, payload)
+    return response.json()
+
+
+def remove_access_policy(resource_access_id: int):
+    path = f"resource_access/resource_id/{resource_access_id}"
+    response = delete_request(path)
+    return response.json() if response else None
+
+
 def test_data_source_connection(
         name: str,
         type: str,

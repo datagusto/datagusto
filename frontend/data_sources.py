@@ -152,10 +152,19 @@ def get_data_source(ds_id):
 
 def view_data_source_form(ds_id):
     ds = get_data_source(ds_id)
+    access = conn.get_access_policy(ds_id)
 
     if not ds:
         st.error(f"Data Source not found. id = {ds_id}")
         return
+
+    shared_checkbox_disabled = True
+    if access.get("permission", "read") in ["owner", None]:
+        shared_checkbox_disabled = False
+    shared_check_box_value = True
+    if access.get("permission", "read") is None:
+        shared_check_box_value = False
+    shared_checkbox = st.checkbox("Shared", value=shared_check_box_value, key=f"shared_{ds_id}", disabled=shared_checkbox_disabled, on_change=manage_shared_access, args=(ds_id,))
 
     with st.form(f"view_data_source_{ds_id}"):
         st.text_input("Connection Name", value=ds.name, key='Connection Name')
@@ -172,6 +181,15 @@ def view_data_source_form(ds_id):
         st.session_state['ds_id'] = ds_id
 
         st.form_submit_button("Save Changes", on_click=save_data_source_changes, disabled=True)
+
+
+def manage_shared_access(args):
+    (ds_id) = args
+    shared_checkbox = st.session_state[f"shared_{ds_id}"]
+    if shared_checkbox:
+        conn.add_access_policy(ds_id)
+    else:
+        conn.remove_access_policy(ds_id)
 
 
 # Function to update the port based on database type selection
