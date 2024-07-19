@@ -34,7 +34,7 @@ lint.ignore = [
 ]
 include = [
     "pyproject.toml",
-    "./core/",
+    "./core/**/*/*.py",
     "./database/**/*.py",
     "./endpoints/**/*.py",
     "./schemas/**/*.py",

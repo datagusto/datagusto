@@ -42,14 +42,13 @@ class CustomEmbedding(Embeddings):
         """Initialize the sentence_transformer."""
         super().__init__(**kwargs)
 
-        self.model_kwargs = {'device': USE_GPU}
+        self.model_kwargs = {"device": USE_GPU}
 
-        self.client = SentenceTransformer(
-            self.model_name, cache_folder=self.cache_folder, **self.model_kwargs
-        )
+        self.client = SentenceTransformer(self.model_name, cache_folder=self.cache_folder, **self.model_kwargs)
 
     class Config:
         """Configuration for this pydantic object."""
+
         extra = Extra.forbid
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -61,12 +60,9 @@ class CustomEmbedding(Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
-        import sentence_transformers
 
         texts = list(map(lambda x: x.replace("\n", " "), texts))
-        embeddings = self.client.encode(
-            texts, show_progress_bar=False
-        )
+        embeddings = self.client.encode(texts, show_progress_bar=False)
 
         return embeddings.tolist()
 

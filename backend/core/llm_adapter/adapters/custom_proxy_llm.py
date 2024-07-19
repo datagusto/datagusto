@@ -46,12 +46,12 @@ class CustomProxyLLM(LLMBase):
 
     # @retry_post
     def completion(
-            self,
-            prompt: str,
-            role: Optional[str] = None,
-            model_name: Optional[str] = None,
-            temperature: Optional[float] = None,
-            **kwargs,
+        self,
+        prompt: str,
+        role: Optional[str] = None,
+        model_name: Optional[str] = None,
+        temperature: Optional[float] = None,
+        **kwargs,
     ):
         """Generate the completion for a given prompt
 
@@ -81,7 +81,7 @@ class CustomProxyLLM(LLMBase):
                 {
                     "prompt": prompt,
                     "promptRole": role,
-                }
+                },
             ],
             "modelId": _model_name,
             "modelParam": {
@@ -93,17 +93,12 @@ class CustomProxyLLM(LLMBase):
                     "stops": kwargs.get("stops", []),
                     "temperature": _temperature,
                     "toolChoice": kwargs.get("toolChoice", None),
-                    "tools": kwargs.get("tools", [])
-                }
-            }
+                    "tools": kwargs.get("tools", []),
+                },
+            },
         }
 
-        response = requests.request(
-            "POST",
-            self.generation_url,
-            headers=self._generate_headers(),
-            json=payload
-        )
+        response = requests.request("POST", self.generation_url, headers=self._generate_headers(), json=payload)
         data = response.json()
 
         return data
@@ -115,6 +110,6 @@ class CustomProxyLLM(LLMBase):
             "Request-ID": str(uuid.uuid1()),
             "Timestamp": pytz.utc.localize(datetime.utcnow()).isoformat(),
             "API-Key": self.token,
-            "Authorization": os.environ["CUSTOM_PROXY_BASIC_AUTH_TOKEN"]
+            "Authorization": os.environ["CUSTOM_PROXY_BASIC_AUTH_TOKEN"],
         }
         return headers

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Optional
+from typing import Any
 
 
 class LLMBase(ABC):
@@ -12,9 +12,9 @@ class LLMBase(ABC):
         self.model_name = model_name
 
     def completion(
-            self,
-            prompt: str,
-            **kwargs,
+        self,
+        prompt: str,
+        **kwargs,
     ):
         res = self.llm.invoke(prompt)
         return str(res.content)

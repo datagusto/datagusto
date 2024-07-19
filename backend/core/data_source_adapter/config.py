@@ -44,4 +44,3 @@ class OracleConfig(BaseModel):
 class FileConfig(BaseModel):
     file_type: str
     saved_name: str
-

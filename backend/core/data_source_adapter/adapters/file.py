@@ -69,11 +69,11 @@ class FileDataSource(DataSourceBase):
 
     def select_column(self, table: str, column: str, limit: int = 1000):
         df = self.read_file(limit)
-        if not column in df.columns:
+        if column not in df.columns:
             return []
         return df[column].tolist()
 
-    def select_table(self, table: str, limit: int = 1000):
+    def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
         df = self.read_file(limit)
         data = [tuple(row) for row in df.itertuples(index=False, name=None)]
         return data

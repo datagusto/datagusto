@@ -41,6 +41,7 @@ SELECT UC.TABLE_NAME,
      AND UC.TABLE_NAME = '{table_name}'
 """
 
+
 class OracleDataSource(DataSourceBase):
     connection: Any = None
     cursor: Any = None
@@ -63,7 +64,7 @@ class OracleDataSource(DataSourceBase):
             _connection = oracledb.connect(
                 user=self.config["user"],
                 password=self.config["password"],
-                dsn=f'{self.config["host"]}:{self.config["port"]}/{self.config["dbname"]}'
+                dsn=f'{self.config["host"]}:{self.config["port"]}/{self.config["dbname"]}',
             )
             _connection.close()
         except oracledb.DatabaseError:
@@ -75,7 +76,7 @@ class OracleDataSource(DataSourceBase):
             self.connection = oracledb.connect(
                 user=self.config["user"],
                 password=self.config["password"],
-                dsn=f'{self.config["host"]}:{self.config["port"]}/{self.config["dbname"]}'
+                dsn=f'{self.config["host"]}:{self.config["port"]}/{self.config["dbname"]}',
             )
         if not self.cursor:
             self.cursor = self.connection.cursor()
@@ -99,7 +100,12 @@ class OracleDataSource(DataSourceBase):
         for table_name in table_names:
             if table_name.startswith("BIN$") or table_name.startswith("MVIEW$_") or table_name.startswith("AQ$_"):
                 continue
-            if table_name in ["HELP","SCHEDULER_PROGRAM_ARGS_TBL","SCHEDULER_JOB_ARGS_TBL","SQLPLUS_PRODUCT_PROFILE"]:
+            if table_name in [
+                "HELP",
+                "SCHEDULER_PROGRAM_ARGS_TBL",
+                "SCHEDULER_JOB_ARGS_TBL",
+                "SQLPLUS_PRODUCT_PROFILE",
+            ]:
                 continue
             user_tables.append(table_name)
         return user_tables
@@ -110,14 +116,11 @@ class OracleDataSource(DataSourceBase):
         all_columns = {}
         for table in tables:
             logger.debug("Getting column information (metadata) of table :" + table)
-            self.cursor.execute(COLUMN_INFORMATION_SQL.format(
-                user_name=self.config["user"].upper(),
-                table_name=table.upper())
+            self.cursor.execute(
+                COLUMN_INFORMATION_SQL.format(user_name=self.config["user"].upper(), table_name=table.upper()),
             )
             columns = self.cursor.fetchall()
-            self.cursor.execute(RELATIONSHIP_INFORMATION_SQL.format(
-                table_name=table.upper())
-            )
+            self.cursor.execute(RELATIONSHIP_INFORMATION_SQL.format(table_name=table.upper()))
             relationships = self.cursor.fetchall()
 
             for column in columns:
@@ -127,17 +130,18 @@ class OracleDataSource(DataSourceBase):
                     "column_type": data_type,
                     "data_length": data_length,
                     "data_precision": data_precision,
-                    "data_scale": data_scale
+                    "data_scale": data_scale,
                 }
 
                 # Using next() with a generator expression to find the first matching relationship or None
-                _, _, ref_table_name, ref_column_name = next((r for r in relationships if column_name == r[1]),
-                                                          (None, None, None, None))
+                _, _, ref_table_name, ref_column_name = next(
+                    (r for r in relationships if column_name == r[1]),
+                    (None, None, None, None),
+                )
                 if ref_table_name:
-                    column_info.update({
-                        "referenced_table_name": ref_table_name,
-                        "referenced_column_name": ref_column_name
-                    })
+                    column_info.update(
+                        {"referenced_table_name": ref_table_name, "referenced_column_name": ref_column_name},
+                    )
                     relationships.remove((table, column_name, ref_table_name, ref_column_name))
 
                 all_columns.setdefault(table, []).append(column_info)

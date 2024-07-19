@@ -31,45 +31,35 @@ class AzureAIEndpoint(LLMBase):
             data = response.json()
             logger.debug("AzureAI response: %s", data)
             return self._generate_response(data)
-        except Exception as e:
+        except Exception:
             logger.exception("Error happened while connecting to AzureAI Endpoint.")
             return ""
 
-    def _generate_payload(self, prompt: str, max_token:int = 100, **kwargs):
+    def _generate_payload(self, prompt: str, max_token: int = 100, **kwargs):
         payload = prompt
         if "inference.ai.azure.com" in self.endpoint:
-            payload = json.dumps({
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                "max_tokens": max_token,
-                "temperature": self.temperature,
-                "top_p": 1
-            })
+            payload = json.dumps(
+                {
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": max_token,
+                    "temperature": self.temperature,
+                    "top_p": 1,
+                },
+            )
         elif "inference.ml.azure.com" in self.endpoint:
-            payload = json.dumps({
-                "input_data": {
-                    "input_string": [
-                        prompt
-                    ],
-                    "parameters": {
-                        "temperature": self.temperature,
-                        "top_p": 1,
-                        "max_new_tokens": max_token
-                    }
-                }
-            })
+            payload = json.dumps(
+                {
+                    "input_data": {
+                        "input_string": [prompt],
+                        "parameters": {"temperature": self.temperature, "top_p": 1, "max_new_tokens": max_token},
+                    },
+                },
+            )
 
         return payload
 
     def _generate_headers(self):
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.token}'
-        }
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.token}"}
         return headers
 
     def _generate_response(self, response: dict):

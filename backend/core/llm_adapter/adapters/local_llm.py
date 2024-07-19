@@ -28,7 +28,7 @@ class LocalLLM(LLMBase):
         self.tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=model_name,
             trust_remote_code=True,
-            token=self.token
+            token=self.token,
         )
 
         if self.device == "cuda":
@@ -38,7 +38,7 @@ class LocalLLM(LLMBase):
                 trust_remote_code=True,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using GPU...")
         elif self.device == "mps":
@@ -48,7 +48,7 @@ class LocalLLM(LLMBase):
                 trust_remote_code=True,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using Apple M1 GPU...")
         else:
@@ -56,7 +56,7 @@ class LocalLLM(LLMBase):
                 pretrained_model_name_or_path=model_name,
                 trust_remote_code=True,
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using CPU...")
         logger.debug("Loaded model: %s", model_name)
@@ -80,7 +80,7 @@ class LocalLLM(LLMBase):
         try:
             response = self.remove_prompt_from_response(prompt, result[0])
             logger.debug("Response: %s", response)
-        except Exception as e:
+        except Exception:
             logger.exception("Error removing prompt from response.")
             response = result[0]
         return response
@@ -107,6 +107,6 @@ class LocalLLM(LLMBase):
         # Escape any special characters in the prompt to prevent regex issues
         escaped_prompt = re.escape(prompt)
         # Use regex to remove the prompt from the start of the response
-        clean_response = re.sub(f'^{escaped_prompt}', '', response).strip()
+        clean_response = re.sub(f"^{escaped_prompt}", "", response).strip()
 
         return clean_response

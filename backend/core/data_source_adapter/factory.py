@@ -36,7 +36,6 @@ FILE_ADAPTERS = {
 
 
 class DataSourceFactory:
-
     def __init__(self, adapter_name: str, name: str, description: str, connection: dict):
         if adapter_name not in ADAPTERS and adapter_name not in FILE_ADAPTERS:
             raise ValueError(f"{adapter_name} is not a valid data source type.")
@@ -48,17 +47,9 @@ class DataSourceFactory:
     def get_data_source(self) -> "DataSourceBase":
         logger.debug(f"Creating {self.adapter_name} connection: data_source name={self.name}")
         adapter = ADAPTERS[self.adapter_name]
-        return adapter(
-            name=self.name,
-            description=self.description,
-            config=self.connection
-        )
+        return adapter(name=self.name, description=self.description, config=self.connection)
 
     def get_data_source_file(self) -> FileDataSource:
         logger.debug(f"Creating {self.adapter_name} file: data_source name={self.name}")
         adapter = FILE_ADAPTERS[self.adapter_name]
-        return adapter(
-            name=self.name,
-            description=self.description,
-            config=self.connection
-        )
+        return adapter(name=self.name, description=self.description, config=self.connection)

@@ -9,7 +9,7 @@ class DataSourceBase(ABC):
     description: str
     config: dict
 
-    def __init__(self, name: str, description: str, config: dict):
+    def __init__(self, name: str, description: str, config: dict) -> None:
         self.name = name
         self.description = description
         self.config = config
@@ -18,7 +18,7 @@ class DataSourceBase(ABC):
             raise ValueError("Invalid config data.")
         self.post_init()
 
-    def post_init(self):
+    def post_init(self) -> None:
         pass
 
     @abstractmethod
@@ -42,9 +42,9 @@ class DataSourceBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def select_table(self, table: str, limit: int = 1000):
+    def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
         raise NotImplementedError
 
     @abstractmethod
-    def select_column(self, table: str, column: str, limit: int = 1000):
+    def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
         raise NotImplementedError

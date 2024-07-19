@@ -33,5 +33,3 @@ class OpenAILLM(LLMBase):
             api_key=os.environ["OPENAI_KEY"],
             temperature=self.temperature,
         )
-
-

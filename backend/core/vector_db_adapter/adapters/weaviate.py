@@ -29,10 +29,10 @@ SCHEMA = {
                     "name": "content",
                     "dataType": ["text"],
                     "description": "The content of the document",
-                }
+                },
             ],
         },
-    ]
+    ],
 }
 
 
@@ -61,7 +61,7 @@ class WeaviateDBBase(VectorDatabaseBase):
             index_name=self.class_name,
             text_key="content",
             embedding=self.embeddings,
-            attributes=self.attributes
+            attributes=self.attributes,
         )
 
         # insert to vectorstore
@@ -69,35 +69,26 @@ class WeaviateDBBase(VectorDatabaseBase):
         res = vectorstore.add_documents(docs)
         logger.debug(f"VectorDB log: Inserted {len(res)} documents to vectorstore")
 
-    def query(self, query: str, user_id: Optional[int], filter=None,
-              top_k: int = 5, **kwargs):
+    def query(self, query: str, user_id: Optional[int], filter=None, top_k: int = 5, **kwargs):
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
             index_name=self.class_name,
             text_key="content",
             embedding=self.embeddings,
-            attributes=self.attributes
+            attributes=self.attributes,
         )
         filter = self._add_user_id_to_filter(filter, user_id)
         where_filter = {
             "operator": "And",
             "operands": [
-                {
-                    "path": [key],
-                    "operator": "Equal",
-                    "valueNumber" if isinstance(value, int) else "valueString": value
-                }
+                {"path": [key], "operator": "Equal", "valueNumber" if isinstance(value, int) else "valueString": value}
                 for key, value in filter.items()
-            ]
+            ],
         }
         query_embedded = self.embeddings.embed_query(query)
         # data = vectorstore.similarity_search(query, k=top_k)
-        data = vectorstore.similarity_search_by_vector(
-            embedding=query_embedded,
-            k=top_k,
-            where_filter=where_filter
-        )
+        data = vectorstore.similarity_search_by_vector(embedding=query_embedded, k=top_k, where_filter=where_filter)
 
         # print results
         return data
@@ -110,26 +101,18 @@ class WeaviateDBBase(VectorDatabaseBase):
             text_key="content",
             embedding=self.embeddings,
             attributes=self.attributes,
-            by_text=False
+            by_text=False,
         )
         filter = self._add_user_id_to_filter(filter, user_id)
         where_filter = {
             "operator": "And",
             "operands": [
-                {
-                    "path": [key],
-                    "operator": "Equal",
-                    "valueNumber" if isinstance(value, int) else "valueString": value
-                }
+                {"path": [key], "operator": "Equal", "valueNumber" if isinstance(value, int) else "valueString": value}
                 for key, value in filter.items()
-            ]
+            ],
         }
         # where_filter = {"path": ["some_property"], "operator": "Equal", "valueString": "som_value"}
-        data = vectorstore.similarity_search_with_score(
-            query=query,
-            k=top_k,
-            where_filter=where_filter
-        )
+        data = vectorstore.similarity_search_with_score(query=query, k=top_k, where_filter=where_filter)
         # print results
         return data
 
@@ -139,7 +122,7 @@ class WeaviateDBBase(VectorDatabaseBase):
         where_filter = {
             "path": ["data_source_id"],
             "operator": "Equal",
-            "valueNumber" if isinstance(data_source_id, int) else "valueString": data_source_id
+            "valueNumber" if isinstance(data_source_id, int) else "valueString": data_source_id,
         }
         result = self.client.batch.delete_objects(
             class_name=self.class_name,
@@ -179,20 +162,28 @@ class WeaviateDBBase(VectorDatabaseBase):
 
 
 class WeaviateEmbedDB(WeaviateDBBase):
-    def __init__(self, endpoint: Optional[str] = None, class_name: str = WEAVIATE_CLASS_NAME, attributes: list[str] = None, **kwargs):
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        class_name: str = WEAVIATE_CLASS_NAME,
+        attributes: list[str] = None,
+        **kwargs,
+    ):
         endpoint = endpoint or WEAVIATE_PERSISTENT_STORAGE_PATH
         from weaviate.embedded import EmbeddedOptions
 
-        client = weaviate.Client(
-            embedded_options=EmbeddedOptions(
-                persistence_data_path=endpoint
-            )
-        )
+        client = weaviate.Client(embedded_options=EmbeddedOptions(persistence_data_path=endpoint))
         super().__init__(client, class_name, attributes)
 
 
 class WeaviateServerDB(WeaviateDBBase):
-    def __init__(self, endpoint: Optional[str] = None, class_name: str = WEAVIATE_CLASS_NAME, attributes: list[str] = None, **kwargs):
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        class_name: str = WEAVIATE_CLASS_NAME,
+        attributes: list[str] = None,
+        **kwargs,
+    ):
         # embedded weaviate's path is constant, cant not be changed
         endpoint = endpoint or WEAVIATE_DEFAULT_ENDPOINT
         client = weaviate.Client(

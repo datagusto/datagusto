@@ -44,22 +44,22 @@ class MySQLDataSource(DataSourceBase):
             return False
         return True
 
-    def set_cursor(self):
+    def set_cursor(self) -> None:
         if not self.connection:
             self.connection = mysql.connector.connect(**self.config)
         if not self.cursor:
             self.cursor = self.connection.cursor()
 
-    def close(self):
+    def close(self) -> None:
         self.cursor.close()
         self.cursor = None
         self.connection.close()
         self.connection = None
 
-    def get_database_name(self):
+    def get_database_name(self) -> str:
         return self.config["database"]
 
-    def get_all_tables(self):
+    def get_all_tables(self) -> list[str]:
         self.set_cursor()
         self.cursor.execute("SHOW TABLES")
         tables = self.cursor.fetchall()
@@ -74,27 +74,31 @@ class MySQLDataSource(DataSourceBase):
             logger.debug("Getting column information (metadata) of table :" + table)
             self.cursor.execute(COLUMN_INFORMATION_SQL.format(table_name=table))
             columns = self.cursor.fetchall()
-            self.cursor.execute(RELATIONSHIP_INFORMATION_SQL.format(
-                database_name=self.get_database_name(), table_name=table))
+            self.cursor.execute(
+                RELATIONSHIP_INFORMATION_SQL.format(database_name=self.get_database_name(), table_name=table),
+            )
             relationships = self.cursor.fetchall()
 
             for column in columns:
-                column_name, column_type, collation, is_nullable, key, default_value, extra, privileges, comment = column
+                column_name, column_type, collation, is_nullable, key, default_value, extra, privileges, comment = (
+                    column
+                )
                 column_info = {
                     "column_name": column_name,
                     "column_type": column_type,
                     "extra": extra,
-                    "comment": comment
+                    "comment": comment,
                 }
 
                 # Using next() with a generator expression to find the first matching relationship or None
-                _, ref_table_name, ref_column_name = next((r for r in relationships if column_name == r[0]),
-                                                          (None, None, None))
+                _, ref_table_name, ref_column_name = next(
+                    (r for r in relationships if column_name == r[0]),
+                    (None, None, None),
+                )
                 if ref_table_name:
-                    column_info.update({
-                        "referenced_table_name": ref_table_name,
-                        "referenced_column_name": ref_column_name
-                    })
+                    column_info.update(
+                        {"referenced_table_name": ref_table_name, "referenced_column_name": ref_column_name},
+                    )
                     relationships.remove((column_name, ref_table_name, ref_column_name))
 
                 # Using dict.setdefault to simplify the if-else block
@@ -102,17 +106,17 @@ class MySQLDataSource(DataSourceBase):
         self.close()
         return all_columns
 
-    def execute_query(self, query: str):
+    def execute_query(self, query: str) -> list[tuple]:
         self.set_cursor()
         self.cursor.execute(query)
         data = self.cursor.fetchall()
         self.close()
         return data
 
-    def select_column(self, table: str, column: str, limit: int = 1000):
+    def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
         query = f"SELECT `{column}` FROM {table} LIMIT {limit}"
         return self.execute_query(query)
 
-    def select_table(self, table: str, limit: int = 1000):
+    def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
         query = f"SELECT * FROM {table} LIMIT {limit}"
         return self.execute_query(query)
