@@ -46,6 +46,7 @@ oracledb = "*"
 [dev-packages]
 isort = "*"
 ruff = "*"
+mypy = "*"
 
 [torch_cu121]
 accelerate = "*"
