@@ -3,6 +3,7 @@ from logging import getLogger
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from core.abac.check import get_accessible_resource_ids
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
@@ -58,10 +59,11 @@ def join_data(
 
         query = generate_text_from_data(table_name, column["column_name"], data)
 
+        shared_data_source_ids = get_accessible_resource_ids(db, user_id)
         filter = {"column_type": column["column_type"]}
         factory = VectorDatabaseFactory()
         vector_db_client_join = factory.get_vector_database_join()
-        result = vector_db_client_join.query_with_score(query, user_id, filter, top_k=5)
+        result = vector_db_client_join.query_with_score(query, user_id, shared_data_source_ids, filter, top_k=5)
         for doc, score in result:
             metadata = doc.metadata
             if (

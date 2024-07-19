@@ -29,5 +29,4 @@ def login_for_access_token(user_login: user_schema.UserLogin, db: Session = Depe
 
 @router.get("/me", response_model=user_schema.UserResponse)
 def read_users_me(current_user: user_schema.User = Depends(get_current_user)) -> user_schema.User:
-    current_user = get_current_user()
     return current_user
