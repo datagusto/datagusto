@@ -47,6 +47,10 @@ oracledb = "*"
 isort = "*"
 ruff = "*"
 mypy = "*"
+types-requests = "*"
+types-pytz = "*"
+types-passlib = "*"
+pandas-stubs = "*"
 
 [torch_cu121]
 accelerate = "*"

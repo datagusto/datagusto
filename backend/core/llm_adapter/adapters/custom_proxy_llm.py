@@ -52,7 +52,7 @@ class CustomProxyLLM(LLMBase):
         model_name: Optional[str] = None,
         temperature: Optional[float] = None,
         **kwargs: dict,
-    ) -> dict:
+    ) -> str:
         """Generate the completion for a given prompt
 
         prompt: str
@@ -105,7 +105,7 @@ class CustomProxyLLM(LLMBase):
             json=payload,
             timeout=60,
         )
-        data = response.json()
+        data = str(response.content)
 
         return data
 
