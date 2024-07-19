@@ -1,7 +1,9 @@
 import os
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from .adapters.llm_base import LLMBase
 from .adapters.azureai_endpoint import AzureAIEndpoint
-from .adapters.llm_base import LLMBase
 from .adapters.llms import AzureOpenAILLM, OpenAILLM
 from .adapters.local_llm import LocalLLM
 
@@ -15,7 +17,7 @@ ADAPTERS = {
 
 
 class LlmFactory:
-    def __init__(self):
+    def __init__(self) -> None:
         adapter_name = os.environ.get("LLM_USAGE_TYPE")
         if adapter_name not in ADAPTERS:
             raise ValueError("LLM is not configured properly. Please check LLM_USAGE_TYPE in .env file.")

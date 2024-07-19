@@ -1,6 +1,6 @@
 import os
 from logging import getLogger
-from typing import Any, Optional
+from typing import Optional
 
 import weaviate
 from langchain_community.vectorstores.weaviate import Weaviate
@@ -42,7 +42,12 @@ class WeaviateDBBase(VectorDatabaseBase):
     attributes: list[str] = METADATA_ATTRIBUTES
     schema: dict
 
-    def __init__(self, client: Any, class_name: str = WEAVIATE_CLASS_NAME, attributes: list[str] = None):
+    def __init__(
+        self,
+        client: weaviate.client.Client,
+        class_name: str = WEAVIATE_CLASS_NAME,
+        attributes: Optional[list[str]] = None,
+    ) -> None:
         super().__init__(client)
 
         self.class_name = class_name
@@ -54,7 +59,7 @@ class WeaviateDBBase(VectorDatabaseBase):
         if not self._check_class_name_exists():
             self._create_schema()
 
-    def save(self, docs: list[Document], **kwargs):
+    def save(self, docs: list[Document], **kwargs: dict) -> None:
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -69,7 +74,15 @@ class WeaviateDBBase(VectorDatabaseBase):
         res = vectorstore.add_documents(docs)
         logger.debug(f"VectorDB log: Inserted {len(res)} documents to vectorstore")
 
-    def query(self, query: str, user_id: Optional[int], shared_data_source_ids: Optional[list[int]] = None, filter: Optional[dict] = None, top_k: int = 5, **kwargs):
+    def query(
+        self,
+        query: str,
+        user_id: Optional[int],
+        shared_data_source_ids: Optional[list[int]] = None,
+        filter: Optional[dict] = None,
+        top_k: int = 5,
+        **kwargs: dict,
+    ) -> list[Document]:
         shared_data_source_ids = shared_data_source_ids or []
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
@@ -94,7 +107,15 @@ class WeaviateDBBase(VectorDatabaseBase):
         # print results
         return data
 
-    def query_with_score(self, query: str, user_id: Optional[int], shared_data_source_ids: Optional[list[int]] = None, filter: Optional[dict] = None, top_k: int = 5, **kwargs):
+    def query_with_score(
+        self,
+        query: str,
+        user_id: Optional[int],
+        shared_data_source_ids: Optional[list[int]] = None,
+        filter: Optional[dict] = None,
+        top_k: int = 5,
+        **kwargs: dict,
+    ) -> list[tuple[Document, float]]:
         shared_data_source_ids = shared_data_source_ids or []
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
@@ -118,7 +139,7 @@ class WeaviateDBBase(VectorDatabaseBase):
         # print results
         return data
 
-    def delete_by_filter(self, filter: dict, **kwargs):
+    def delete_by_filter(self, filter: dict, **kwargs: dict) -> dict:
         logger.debug("VectorDB log: Deleting data of data source : " + str(filter))
         data_source_id = filter["data_source_id"]
         where_filter = {
@@ -132,10 +153,10 @@ class WeaviateDBBase(VectorDatabaseBase):
         )
         return result
 
-    def clear(self, **kwargs):
+    def clear(self, **kwargs: dict) -> None:
         self.client.schema.delete_all()
 
-    def _create_schema(self):
+    def _create_schema(self) -> None:
         # since embedded weaviate is in experimental stage, we can not use text2vec-transformers
         # https://weaviate.io/developers/weaviate/starter-guides/which-weaviate#by-vectorizer--reranker
 
@@ -152,7 +173,7 @@ class WeaviateDBBase(VectorDatabaseBase):
         # for more information: https://weaviate.io/developers/weaviate/config-refs/schema
         self.client.schema.create(self.schema)
 
-    def _check_class_name_exists(self):
+    def _check_class_name_exists(self) -> bool:
         # return False
         try:
             self.client.schema.get(self.class_name)
@@ -168,9 +189,9 @@ class WeaviateEmbedDB(WeaviateDBBase):
         self,
         endpoint: Optional[str] = None,
         class_name: str = WEAVIATE_CLASS_NAME,
-        attributes: list[str] = None,
-        **kwargs,
-    ):
+        attributes: Optional[list[str]] = None,
+        **kwargs: dict,
+    ) -> None:
         endpoint = endpoint or WEAVIATE_PERSISTENT_STORAGE_PATH
         from weaviate.embedded import EmbeddedOptions
 
@@ -183,9 +204,9 @@ class WeaviateServerDB(WeaviateDBBase):
         self,
         endpoint: Optional[str] = None,
         class_name: str = WEAVIATE_CLASS_NAME,
-        attributes: list[str] = None,
-        **kwargs,
-    ):
+        attributes: Optional[list[str]] = None,
+        **kwargs: dict,
+    ) -> None:
         # embedded weaviate's path is constant, cant not be changed
         endpoint = endpoint or WEAVIATE_DEFAULT_ENDPOINT
         client = weaviate.Client(

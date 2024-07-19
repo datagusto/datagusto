@@ -1,7 +1,7 @@
 import os
 import re
 from logging import getLogger
-from typing import Any
+from typing import Any, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -19,7 +19,7 @@ class LocalLLM(LLMBase):
     device: str
     instruction_models: list[str] = [DEFAULT_LOCAL_LLM]
 
-    def __init__(self, model_name: str = None, temperature: float = 0.1):
+    def __init__(self, model_name: Optional[str] = None, temperature: float = 0.1):
         model_name = model_name or os.getenv("HUGGING_FACE_MODEL_NAME", DEFAULT_LOCAL_LLM)
         super().__init__(model_name, temperature)
 
@@ -61,7 +61,7 @@ class LocalLLM(LLMBase):
             logger.debug("Using CPU...")
         logger.debug("Loaded model: %s", model_name)
 
-    def completion(self, prompt: str, max_token: int = 100, **kwargs) -> str:
+    def completion(self, prompt: str, max_token: int = 100, **kwargs: dict) -> str:
         complete_prompt = self.format_prompt_for_completion(prompt)
         if self.device == "cuda":
             model_inputs = self.tokenizer([complete_prompt], return_tensors="pt").to("cuda")

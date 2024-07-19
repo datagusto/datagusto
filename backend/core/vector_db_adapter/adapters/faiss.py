@@ -17,7 +17,7 @@ logger = getLogger("uvicorn.app")
 class FaissDB(VectorDatabaseBase):
     storage_path: str
 
-    def __init__(self, endpoint: Optional[str] = None, **kwargs):
+    def __init__(self, endpoint: Optional[str] = None, **kwargs: dict) -> None:
         # FAISS's path is constant, cant not be changed
         endpoint = FAISS_PERSISTENT_STORAGE_PATH
         if "class_name" in kwargs:
@@ -27,7 +27,7 @@ class FaissDB(VectorDatabaseBase):
         self.storage_path = endpoint
         super().__init__(client, embeddings=embeddings)
 
-    def save(self, docs: list[Document], storage_path: Optional[str] = None, **kwargs):
+    def save(self, docs: list[Document], storage_path: Optional[str] = None, **kwargs: dict) -> None:
         logger.debug("VectorDB log: Creating vectorstore instance")
         db = FAISS.from_documents(docs, self.embeddings)
 
@@ -46,8 +46,8 @@ class FaissDB(VectorDatabaseBase):
         filter: Optional[dict] = None,
         top_k: int = 5,
         storage_path: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: dict,
+    ) -> list[Document]:
         shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
@@ -71,8 +71,8 @@ class FaissDB(VectorDatabaseBase):
         filter: Optional[dict] = None,
         top_k: int = 5,
         storage_path: Optional[str] = None,
-        **kwargs,
-    ):
+        **kwargs: dict,
+    ) -> list[tuple[Document, float]]:
         shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
@@ -87,14 +87,14 @@ class FaissDB(VectorDatabaseBase):
             results.extend(db.similarity_search_with_score(query, filter=_filter, k=top_k))
         return results
 
-    def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs):
+    def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs: dict) -> bool:
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return False
 
         doc_id_list = []
         for doc_id, doc in db.docstore._dict.items():
-            is_match = all([doc.metadata.get(key) == value for key, value in filter.items()])
+            is_match = all(doc.metadata.get(key) == value for key, value in filter.items())
             if is_match:
                 doc_id_list.append(doc_id)
 
@@ -105,7 +105,7 @@ class FaissDB(VectorDatabaseBase):
 
         return False
 
-    def clear(self, storage_path: Optional[str] = None, **kwargs):
+    def clear(self, storage_path: Optional[str] = None, **kwargs: dict) -> None:
         db = self._load_local_vectorstore(storage_path)
         if db:
             indexes = list(db.index_to_docstore_id.values())
@@ -113,7 +113,7 @@ class FaissDB(VectorDatabaseBase):
                 db.delete(indexes)
                 db.save_local(storage_path or self.storage_path)
 
-    def _load_local_vectorstore(self, storage_path: Optional[str] = None):
+    def _load_local_vectorstore(self, storage_path: Optional[str] = None) -> Optional[FAISS]:
         path = storage_path or self.storage_path
         if os.path.exists(path):
             return FAISS.load_local(

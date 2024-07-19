@@ -1,7 +1,10 @@
 import os
 from logging import getLogger
+from typing import TYPE_CHECKING
 
-from .adapters.base import VectorDatabaseBase
+if TYPE_CHECKING:
+    from .adapters.base import VectorDatabaseBase
+
 from .adapters.faiss import FaissDB
 from .adapters.weaviate import WeaviateEmbedDB, WeaviateServerDB
 
@@ -17,7 +20,7 @@ ADAPTERS = {
 class VectorDatabaseFactory:
     join_data_class_name = "Joined_data"
 
-    def __init__(self):
+    def __init__(self) -> None:
         adapter_name = os.environ["VECTOR_DB_USAGE_TYPE"]
         if adapter_name not in ADAPTERS:
             raise ValueError(
