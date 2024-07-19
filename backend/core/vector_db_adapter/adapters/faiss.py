@@ -42,32 +42,49 @@ class FaissDB(VectorDatabaseBase):
         self,
         query: str,
         user_id: int,
+        shared_data_source_ids: Optional[list[int]] = None,
         filter: Optional[dict] = None,
         top_k: int = 5,
         storage_path: Optional[str] = None,
         **kwargs,
     ):
-        filter = self._add_user_id_to_filter(filter, user_id)
+        shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return []
-        docs = db.similarity_search(query, filter=filter, k=top_k)
+
+        # search through owned data sources
+        _filter = self._add_filter_attribute(filter, "user_id", user_id)
+        docs = db.similarity_search(query, filter=_filter, k=top_k)
+
+        # search through shared data sources
+        for data_source_id in shared_data_source_ids:
+            _filter = self._add_filter_attribute(filter, "data_source_id", data_source_id)
+            docs.extend(db.similarity_search(query, filter=_filter, k=top_k))
         return docs
 
     def query_with_score(
         self,
         query: str,
         user_id: int,
-        filter: Optional[dict],
+        shared_data_source_ids: Optional[list[int]] = None,
+        filter: Optional[dict] = None,
         top_k: int = 5,
         storage_path: Optional[str] = None,
         **kwargs,
     ):
-        filter = self._add_user_id_to_filter(filter, user_id)
+        shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return []
-        results = db.similarity_search_with_score(query, filter=filter, k=top_k)
+        # search through owned data sources
+        _filter = self._add_filter_attribute(filter, "user_id", user_id)
+        results = db.similarity_search_with_score(query, filter=_filter, k=top_k)
+
+        # search through shared data sources
+        for data_source_id in shared_data_source_ids:
+            _filter = self._add_filter_attribute(filter, "data_source_id", data_source_id)
+            results.extend(db.similarity_search_with_score(query, filter=_filter, k=top_k))
         return results
 
     def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs):

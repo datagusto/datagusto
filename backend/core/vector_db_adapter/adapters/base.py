@@ -21,11 +21,11 @@ class VectorDatabaseBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def query(self, query: str, user_id: Optional[int], top_k: int = 5, **kwargs):
+    def query(self, query: str, user_id: Optional[int], shared_data_source_ids: Optional[list[int]] = None, top_k: int = 5, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def query_with_score(self, query: str, user_id: int, filter, top_k: int = 5, **kwargs) -> list[tuple[Document, float]]:
+    def query_with_score(self, query: str, user_id: int, shared_data_source_ids: Optional[list[int]] = None, filter: Optional[dict] = None, top_k: int = 5, **kwargs) -> list[tuple[Document, float]]:
         raise NotImplementedError
     
     @abstractmethod
@@ -36,8 +36,7 @@ class VectorDatabaseBase(ABC):
     def clear(self, **kwargs):
         raise NotImplementedError
 
-    def _add_user_id_to_filter(self, filter: Optional[dict], user_id: Optional[int]):
-        if user_id:
-            filter = filter or {}
-            filter.setdefault("user_id", user_id)
+    def _add_filter_attribute(self, filter: Optional[dict], attribute: str, value: Any):
+        filter = filter or {}
+        filter.setdefault(attribute, value)
         return filter

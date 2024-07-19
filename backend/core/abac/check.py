@@ -50,4 +50,6 @@ def get_accessible_resource_ids(db: Session, user_id: int) -> list[int]:
     # Combine the queries using union
     accessible_resources = itertools.chain(shared_permissions, public_shared_permissions, tenant_shared_resources)
 
-    return [permission.resource_id for permission in accessible_resources]
+    resource_ids = [permission.resource_id for permission in accessible_resources]
+
+    return list(dict.fromkeys(resource_ids))

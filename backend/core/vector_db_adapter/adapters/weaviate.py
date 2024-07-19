@@ -69,7 +69,8 @@ class WeaviateDBBase(VectorDatabaseBase):
         res = vectorstore.add_documents(docs)
         logger.debug(f"VectorDB log: Inserted {len(res)} documents to vectorstore")
 
-    def query(self, query: str, user_id: Optional[int], filter=None, top_k: int = 5, **kwargs):
+    def query(self, query: str, user_id: Optional[int], shared_data_source_ids: Optional[list[int]] = None, filter: Optional[dict] = None, top_k: int = 5, **kwargs):
+        shared_data_source_ids = shared_data_source_ids or []
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -78,7 +79,7 @@ class WeaviateDBBase(VectorDatabaseBase):
             embedding=self.embeddings,
             attributes=self.attributes,
         )
-        filter = self._add_user_id_to_filter(filter, user_id)
+        filter = self._add_filter_attribute(filter, "user_id", user_id)
         where_filter = {
             "operator": "And",
             "operands": [
@@ -93,7 +94,8 @@ class WeaviateDBBase(VectorDatabaseBase):
         # print results
         return data
 
-    def query_with_score(self, query: str, user_id: Optional[int], filter, top_k: int = 5, **kwargs):
+    def query_with_score(self, query: str, user_id: Optional[int], shared_data_source_ids: Optional[list[int]] = None, filter: Optional[dict] = None, top_k: int = 5, **kwargs):
+        shared_data_source_ids = shared_data_source_ids or []
         logger.debug("VectorDB log: Creating vectorstore instance")
         vectorstore = Weaviate(
             client=self.client,
@@ -103,7 +105,7 @@ class WeaviateDBBase(VectorDatabaseBase):
             attributes=self.attributes,
             by_text=False,
         )
-        filter = self._add_user_id_to_filter(filter, user_id)
+        filter = self._add_filter_attribute(filter, "user_id", user_id)
         where_filter = {
             "operator": "And",
             "operands": [
