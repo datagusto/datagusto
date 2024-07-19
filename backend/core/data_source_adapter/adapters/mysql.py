@@ -1,9 +1,13 @@
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 import mysql.connector
 
 from ..config import MySQLConfig
 from .base import DataSourceBase
+
+if TYPE_CHECKING:
+    from mysql.connector.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
 
 logger = getLogger("uvicorn.app")
 
@@ -114,9 +118,9 @@ class MySQLDataSource(DataSourceBase):
         return data
 
     def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
-        query = f"SELECT `{column}` FROM {table} LIMIT {limit}"
+        query = f"SELECT `{column}` FROM {table} LIMIT {limit}"  # noqa: S608
         return self.execute_query(query)
 
     def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
-        query = f"SELECT * FROM {table} LIMIT {limit}"
+        query = f"SELECT * FROM {table} LIMIT {limit}"  # noqa: S608
         return self.execute_query(query)

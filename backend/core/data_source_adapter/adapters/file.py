@@ -1,7 +1,7 @@
 import os
 import shutil
 from logging import getLogger
-from typing import Optional
+from typing import BinaryIO, Optional
 
 import pandas as pd
 
@@ -17,7 +17,7 @@ FILE_STORAGE_PATH = os.path.join(".", "data", "files")
 class FileDataSource(DataSourceBase):
     file_type: str
 
-    def post_init(self):
+    def post_init(self) -> None:
         self.file_type = self.config.get("file_type")
 
     def validate_config(self) -> bool:
@@ -45,7 +45,7 @@ class FileDataSource(DataSourceBase):
     def get_all_tables(self) -> list:
         return ["file"]
 
-    def get_all_columns(self) -> dict:
+    def get_all_columns(self) -> dict[str, list]:
         df = self.read_file()
         all_columns = {"table": []}
         for column in df.columns:
@@ -59,7 +59,7 @@ class FileDataSource(DataSourceBase):
 
         return all_columns
 
-    def save_file(self, file):
+    def save_file(self, file: BinaryIO) -> None:
         destination = self.get_path()
         try:
             with open(destination, "wb") as buffer:
@@ -67,7 +67,7 @@ class FileDataSource(DataSourceBase):
         finally:
             file.close()
 
-    def select_column(self, table: str, column: str, limit: int = 1000):
+    def select_column(self, table: str, column: str, limit: int = 1000) -> list[dict]:
         df = self.read_file(limit)
         if column not in df.columns:
             return []

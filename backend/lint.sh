@@ -18,3 +18,5 @@ pipenv run ruff format ${lint_files[@]}
 
 # ruff check
 pipenv run ruff check ${lint_files[@]} --fix
+
+# pipenv run ruff check ${lint_files[@]} --fix --unsafe-fixes

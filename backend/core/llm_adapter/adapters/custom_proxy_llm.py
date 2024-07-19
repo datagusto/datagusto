@@ -17,7 +17,7 @@ class CustomProxyLLM(LLMBase):
     embed_url: str = None
     generation_url: str = None
 
-    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1, **kwargs):
+    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1, **kwargs: dict) -> None:
         super().__init__(model_name, temperature)
         self.token = os.environ["CUSTOM_PROXY_TOKEN"]
         self.embed_url = os.environ["CUSTOM_PROXY_EMBED_URL"]
@@ -25,7 +25,7 @@ class CustomProxyLLM(LLMBase):
         self.llm = None
 
     # @retry_post
-    def embed(self, text: str, model_id: str = "text-embedding-ada-002"):
+    def embed(self, text: str, model_id: str = "text-embedding-ada-002") -> dict:
         """Get the embedding for a given text using the specified model"""
         payload = {
             "modelId": model_id,
@@ -38,9 +38,9 @@ class CustomProxyLLM(LLMBase):
             self.embed_url,
             headers=self._generate_headers(),
             json=payload,
+            timeout=60,
         )
         data = response.json()
-        print(data)
 
         return data
 
@@ -51,8 +51,8 @@ class CustomProxyLLM(LLMBase):
         role: Optional[str] = None,
         model_name: Optional[str] = None,
         temperature: Optional[float] = None,
-        **kwargs,
-    ):
+        **kwargs: dict,
+    ) -> dict:
         """Generate the completion for a given prompt
 
         prompt: str
@@ -98,7 +98,13 @@ class CustomProxyLLM(LLMBase):
             },
         }
 
-        response = requests.request("POST", self.generation_url, headers=self._generate_headers(), json=payload)
+        response = requests.request(
+            "POST",
+            self.generation_url,
+            headers=self._generate_headers(),
+            json=payload,
+            timeout=60,
+        )
         data = response.json()
 
         return data

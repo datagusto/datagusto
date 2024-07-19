@@ -16,14 +16,14 @@ WHERE user_tables.TABLESPACE_NAME = '{tablespace_name}'
 """
 
 COLUMN_INFORMATION_SQL = """
-SELECT 
+SELECT
     COLUMN_NAME,
     DATA_TYPE,
     DATA_LENGTH,
     DATA_PRECISION,
     DATA_SCALE
 FROM ALL_TAB_COLUMNS
-    WHERE TABLE_NAME = '{table_name}' 
+    WHERE TABLE_NAME = '{table_name}'
     AND owner = '{user_name}'
 """
 
@@ -47,7 +47,7 @@ class OracleDataSource(DataSourceBase):
     cursor: Any = None
     schema: str = None
 
-    def post_init(self):
+    def post_init(self) -> None:
         self.schema = self.config.pop("schema", "system")
 
     def validate_config(self) -> bool:
@@ -71,7 +71,7 @@ class OracleDataSource(DataSourceBase):
             return False
         return True
 
-    def set_cursor(self):
+    def set_cursor(self) -> None:
         if not self.connection:
             self.connection = oracledb.connect(
                 user=self.config["user"],
@@ -81,16 +81,16 @@ class OracleDataSource(DataSourceBase):
         if not self.cursor:
             self.cursor = self.connection.cursor()
 
-    def close(self):
+    def close(self) -> None:
         self.cursor.close()
         self.cursor = None
         self.connection.close()
         self.connection = None
 
-    def get_database_name(self):
+    def get_database_name(self) -> str:
         return self.config["dbname"]
 
-    def get_all_tables(self):
+    def get_all_tables(self) -> list[str]:
         self.set_cursor()
         self.cursor.execute(TABLES_SQL.format(tablespace_name=self.schema.upper()))
         tables = self.cursor.fetchall()
@@ -110,7 +110,7 @@ class OracleDataSource(DataSourceBase):
             user_tables.append(table_name)
         return user_tables
 
-    def get_all_columns(self):
+    def get_all_columns(self) -> dict[str, list[dict[str, Any]]]:
         tables = self.get_all_tables()
         self.set_cursor()
         all_columns = {}
@@ -148,17 +148,17 @@ class OracleDataSource(DataSourceBase):
         self.close()
         return all_columns
 
-    def execute_query(self, query: str):
+    def execute_query(self, query: str) -> list[tuple]:
         self.set_cursor()
         self.cursor.execute(query)
         data = self.cursor.fetchall()
         self.close()
         return data
 
-    def select_column(self, table: str, column: str, limit: int = 1000):
-        query = f"SELECT {column} FROM {table} FETCH FIRST {limit} ROWS ONLY"
+    def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
+        query = f"SELECT {column} FROM {table} FETCH FIRST {limit} ROWS ONLY"  # noqa: S608
         return self.execute_query(query)
 
-    def select_table(self, table: str, limit: int = 1000):
-        query = f"SELECT * FROM {table} FETCH FIRST {limit} ROWS ONLY"
+    def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
+        query = f"SELECT * FROM {table} FETCH FIRST {limit} ROWS ONLY"  # noqa: S608
         return self.execute_query(query)

@@ -1,7 +1,7 @@
 import os
 import re
 from logging import getLogger
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -17,9 +17,9 @@ class LocalLLM(LLMBase):
     tokenizer: Any
     token: str
     device: str
-    instruction_models: list[str] = [DEFAULT_LOCAL_LLM]
+    instruction_models: ClassVar[list[str]] = [DEFAULT_LOCAL_LLM]
 
-    def __init__(self, model_name: Optional[str] = None, temperature: float = 0.1):
+    def __init__(self, model_name: Optional[str] = None, temperature: float = 0.1) -> None:
         model_name = model_name or os.getenv("HUGGING_FACE_MODEL_NAME", DEFAULT_LOCAL_LLM)
         super().__init__(model_name, temperature)
 
