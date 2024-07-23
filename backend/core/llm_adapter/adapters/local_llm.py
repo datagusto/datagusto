@@ -1,7 +1,7 @@
 import os
 import re
 from logging import getLogger
-from typing import Any
+from typing import Any, ClassVar, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -17,9 +17,9 @@ class LocalLLM(LLMBase):
     tokenizer: Any
     token: str
     device: str
-    instruction_models: list[str] = [DEFAULT_LOCAL_LLM]
+    instruction_models: ClassVar[list[str]] = [DEFAULT_LOCAL_LLM]
 
-    def __init__(self, model_name: str = None, temperature: float = 0.1):
+    def __init__(self, model_name: Optional[str] = None, temperature: float = 0.1) -> None:
         model_name = model_name or os.getenv("HUGGING_FACE_MODEL_NAME", DEFAULT_LOCAL_LLM)
         super().__init__(model_name, temperature)
 
@@ -28,7 +28,7 @@ class LocalLLM(LLMBase):
         self.tokenizer = AutoTokenizer.from_pretrained(
             pretrained_model_name_or_path=model_name,
             trust_remote_code=True,
-            token=self.token
+            token=self.token,
         )
 
         if self.device == "cuda":
@@ -38,7 +38,7 @@ class LocalLLM(LLMBase):
                 trust_remote_code=True,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using GPU...")
         elif self.device == "mps":
@@ -48,7 +48,7 @@ class LocalLLM(LLMBase):
                 trust_remote_code=True,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using Apple M1 GPU...")
         else:
@@ -56,12 +56,12 @@ class LocalLLM(LLMBase):
                 pretrained_model_name_or_path=model_name,
                 trust_remote_code=True,
                 low_cpu_mem_usage=True,
-                token=self.token
+                token=self.token,
             )
             logger.debug("Using CPU...")
         logger.debug("Loaded model: %s", model_name)
 
-    def completion(self, prompt: str, max_token: int = 100, **kwargs) -> str:
+    def completion(self, prompt: str, max_token: int = 100, **kwargs: dict) -> str:
         complete_prompt = self.format_prompt_for_completion(prompt)
         if self.device == "cuda":
             model_inputs = self.tokenizer([complete_prompt], return_tensors="pt").to("cuda")
@@ -80,7 +80,7 @@ class LocalLLM(LLMBase):
         try:
             response = self.remove_prompt_from_response(prompt, result[0])
             logger.debug("Response: %s", response)
-        except Exception as e:
+        except Exception:
             logger.exception("Error removing prompt from response.")
             response = result[0]
         return response
@@ -107,6 +107,6 @@ class LocalLLM(LLMBase):
         # Escape any special characters in the prompt to prevent regex issues
         escaped_prompt = re.escape(prompt)
         # Use regex to remove the prompt from the start of the response
-        clean_response = re.sub(f'^{escaped_prompt}', '', response).strip()
+        clean_response = re.sub(f"^{escaped_prompt}", "", response).strip()
 
         return clean_response

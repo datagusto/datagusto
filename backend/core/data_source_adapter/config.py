@@ -11,7 +11,7 @@ class MySQLConfig(BaseModel):
     database: str
 
     @property
-    def host_port(self):
+    def host_port(self) -> str:
         return f"{self.host}:{self.port}"
 
 
@@ -24,7 +24,7 @@ class PostgreSQLConfig(BaseModel):
     schema: Optional[str]
 
     @property
-    def host_port(self):
+    def host_port(self) -> str:
         return f"{self.host}:{self.port}"
 
 
@@ -37,11 +37,10 @@ class OracleConfig(BaseModel):
     schema: Optional[str]
 
     @property
-    def dsn(self):
+    def dsn(self) -> str:
         return f"{self.host}:{self.port}/{self.dbname}"
 
 
 class FileConfig(BaseModel):
     file_type: str
     saved_name: str
-

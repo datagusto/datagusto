@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy.orm import Session
 
 from core.vector_db_adapter.factory import VectorDatabaseFactory
@@ -39,8 +39,6 @@ def req_get_data_source_by_id(
     db: Session = Depends(get_db),
 ) -> data_source_schema.DataSource:
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=current_user.id)
-    if not data_source:
-        raise HTTPException(status_code=404, detail=f"DataSource ID: {data_source_id} not found")
     return data_source
 
 

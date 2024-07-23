@@ -1,8 +1,10 @@
 from logging import getLogger
+from typing import Union
 
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from core.abac.check import get_accessible_resource_ids
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
@@ -10,7 +12,7 @@ from database.crud import data_source as data_source_crud
 from .sub import flatten_concatenation, generate_text_from_data
 
 logger = getLogger("uvicorn.app")
-SCORE_THRESHOLD = 0.07
+SCORE_THRESHOLD = 0.075
 
 
 def join_data(
@@ -19,12 +21,9 @@ def join_data(
     table_name: str,
     db: Session,
     threshold: float = SCORE_THRESHOLD,
-) -> tuple[pd.DataFrame, dict]:
+) -> dict[int, dict[str, Union[pd.DataFrame, list[list[str]]]]]:
     # get data from target data source
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
-    if not data_source:
-        logger.warning("data_source_id: %s not found", data_source_id)
-        raise Exception(f"DataSource ID: {data_source_id} not found")
 
     # create connection to data source
     factory = DataSourceFactory(
@@ -58,16 +57,17 @@ def join_data(
 
         query = generate_text_from_data(table_name, column["column_name"], data)
 
+        shared_data_source_ids = get_accessible_resource_ids(db, user_id)
         filter = {"column_type": column["column_type"]}
         factory = VectorDatabaseFactory()
         vector_db_client_join = factory.get_vector_database_join()
-        result = vector_db_client_join.query_with_score(query, user_id, filter, top_k=5)
+        result = vector_db_client_join.query_with_score(query, user_id, shared_data_source_ids, filter, top_k=5)
         for doc, score in result:
             metadata = doc.metadata
+            # skip the same table
             if (
-                metadata["data_source_id"] == data_source_id
-                and metadata["table_name"] == table_name
-                and metadata["column_name"] == column["column_name"]
+                metadata["data_source_id"] == data_source_id and metadata["table_name"] == table_name
+                # and metadata["column_name"] == column["column_name"]
             ):
                 continue
             logger.info("doc: %s, score: %s", doc.metadata, score)
@@ -106,8 +106,9 @@ def join_data(
     source_data_data = connection.select_table(table_name, limit=1000)
     logger.info("source_data_data: %s", source_data_data[:5])
     logger.info("source_data_columns: %s", source_data_columns)
-    merged_df = pd.DataFrame(source_data_data, columns=source_data_columns)
+    source_data_df = pd.DataFrame(source_data_data, columns=source_data_columns)
 
+    merged_dfs = {}
     for target_data_source_id in joinable_info:
         target_data_source = data_source_crud.get_data_source(db, data_source_id=target_data_source_id, user_id=user_id)
         factory = DataSourceFactory(
@@ -117,6 +118,7 @@ def join_data(
             connection=target_data_source.connection,
         )
         target_connection = factory.get_data_source()
+        merged_dfs[target_data_source_id] = {}
         for target_table_name in joinable_info[target_data_source_id]:
             target_table_information = data_source_crud.get_table(db, target_data_source_id, target_table_name, user_id)
             target_data_columns = [col["column_name"] for col in target_table_information.table_info.get("columns")]
@@ -126,6 +128,12 @@ def join_data(
 
             left_on, right_on = zip(*joinable_info[target_data_source_id][target_table_name])
 
-            merged_df = pd.merge(merged_df, target_data_df, how="left", left_on=left_on, right_on=right_on)
+            merged_dfs[target_data_source_id][target_table_name] = {}
+            merged_dfs[target_data_source_id][target_table_name]["data"] = pd.merge(
+                source_data_df, target_data_df, how="left", left_on=left_on, right_on=right_on,
+            )
+            merged_dfs[target_data_source_id][target_table_name]["columns"] = joinable_info[target_data_source_id][
+                target_table_name
+            ]
 
-    return merged_df, joinable_info
+    return merged_dfs

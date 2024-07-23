@@ -17,7 +17,7 @@ class CustomProxyLLM(LLMBase):
     embed_url: str = None
     generation_url: str = None
 
-    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1, **kwargs):
+    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1, **kwargs: dict) -> None:
         super().__init__(model_name, temperature)
         self.token = os.environ["CUSTOM_PROXY_TOKEN"]
         self.embed_url = os.environ["CUSTOM_PROXY_EMBED_URL"]
@@ -25,7 +25,7 @@ class CustomProxyLLM(LLMBase):
         self.llm = None
 
     # @retry_post
-    def embed(self, text: str, model_id: str = "text-embedding-ada-002"):
+    def embed(self, text: str, model_id: str = "text-embedding-ada-002") -> dict:
         """Get the embedding for a given text using the specified model"""
         payload = {
             "modelId": model_id,
@@ -38,21 +38,21 @@ class CustomProxyLLM(LLMBase):
             self.embed_url,
             headers=self._generate_headers(),
             json=payload,
+            timeout=60,
         )
         data = response.json()
-        print(data)
 
         return data
 
     # @retry_post
     def completion(
-            self,
-            prompt: str,
-            role: Optional[str] = None,
-            model_name: Optional[str] = None,
-            temperature: Optional[float] = None,
-            **kwargs,
-    ):
+        self,
+        prompt: str,
+        role: Optional[str] = None,
+        model_name: Optional[str] = None,
+        temperature: Optional[float] = None,
+        **kwargs: dict,
+    ) -> str:
         """Generate the completion for a given prompt
 
         prompt: str
@@ -81,7 +81,7 @@ class CustomProxyLLM(LLMBase):
                 {
                     "prompt": prompt,
                     "promptRole": role,
-                }
+                },
             ],
             "modelId": _model_name,
             "modelParam": {
@@ -93,18 +93,19 @@ class CustomProxyLLM(LLMBase):
                     "stops": kwargs.get("stops", []),
                     "temperature": _temperature,
                     "toolChoice": kwargs.get("toolChoice", None),
-                    "tools": kwargs.get("tools", [])
-                }
-            }
+                    "tools": kwargs.get("tools", []),
+                },
+            },
         }
 
         response = requests.request(
             "POST",
             self.generation_url,
             headers=self._generate_headers(),
-            json=payload
+            json=payload,
+            timeout=60,
         )
-        data = response.json()
+        data = str(response.content)
 
         return data
 
@@ -115,6 +116,6 @@ class CustomProxyLLM(LLMBase):
             "Request-ID": str(uuid.uuid1()),
             "Timestamp": pytz.utc.localize(datetime.utcnow()).isoformat(),
             "API-Key": self.token,
-            "Authorization": os.environ["CUSTOM_PROXY_BASIC_AUTH_TOKEN"]
+            "Authorization": os.environ["CUSTOM_PROXY_BASIC_AUTH_TOKEN"],
         }
         return headers

@@ -17,7 +17,7 @@ logger = getLogger("uvicorn.app")
 class FaissDB(VectorDatabaseBase):
     storage_path: str
 
-    def __init__(self, endpoint: Optional[str] = None, **kwargs):
+    def __init__(self, endpoint: Optional[str] = None, **kwargs: dict) -> None:
         # FAISS's path is constant, cant not be changed
         endpoint = FAISS_PERSISTENT_STORAGE_PATH
         if "class_name" in kwargs:
@@ -27,7 +27,7 @@ class FaissDB(VectorDatabaseBase):
         self.storage_path = endpoint
         super().__init__(client, embeddings=embeddings)
 
-    def save(self, docs: list[Document], storage_path: Optional[str] = None, **kwargs):
+    def save(self, docs: list[Document], storage_path: Optional[str] = None, **kwargs: dict) -> None:
         logger.debug("VectorDB log: Creating vectorstore instance")
         db = FAISS.from_documents(docs, self.embeddings)
 
@@ -38,32 +38,63 @@ class FaissDB(VectorDatabaseBase):
             db.merge_from(local_db)
         db.save_local(storage_path or self.storage_path)
 
-    def query(self, query: str, user_id: Optional[int], filter=None,
-              top_k: int = 5, storage_path: Optional[str] = None, **kwargs):
-        filter = self._add_user_id_to_filter(filter, user_id)
+    def query(
+        self,
+        query: str,
+        user_id: int,
+        shared_data_source_ids: Optional[list[int]] = None,
+        filter: Optional[dict] = None,
+        top_k: int = 5,
+        storage_path: Optional[str] = None,
+        **kwargs: dict,
+    ) -> list[Document]:
+        shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return []
-        docs = db.similarity_search(query, filter=filter, k=top_k)
+
+        # search through owned data sources
+        _filter = self._add_filter_attribute(filter, "user_id", user_id)
+        docs = db.similarity_search(query, filter=_filter, k=top_k)
+
+        # search through shared data sources
+        for data_source_id in shared_data_source_ids:
+            _filter = self._add_filter_attribute(filter, "data_source_id", data_source_id)
+            docs.extend(db.similarity_search(query, filter=_filter, k=top_k))
         return docs
 
-    def query_with_score(self, query: str, user_id: Optional[int], filter,
-                         top_k: int = 5, storage_path: Optional[str] = None, **kwargs):
-        filter = self._add_user_id_to_filter(filter, user_id)
+    def query_with_score(
+        self,
+        query: str,
+        user_id: int,
+        shared_data_source_ids: Optional[list[int]] = None,
+        filter: Optional[dict] = None,
+        top_k: int = 5,
+        storage_path: Optional[str] = None,
+        **kwargs: dict,
+    ) -> list[tuple[Document, float]]:
+        shared_data_source_ids = shared_data_source_ids or []
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return []
-        results = db.similarity_search_with_score(query, filter=filter, k=top_k)
+        # search through owned data sources
+        _filter = self._add_filter_attribute(filter, "user_id", user_id)
+        results = db.similarity_search_with_score(query, filter=_filter, k=top_k)
+
+        # search through shared data sources
+        for data_source_id in shared_data_source_ids:
+            _filter = self._add_filter_attribute(filter, "data_source_id", data_source_id)
+            results.extend(db.similarity_search_with_score(query, filter=_filter, k=top_k))
         return results
-    
-    def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs):
+
+    def delete_by_filter(self, filter: dict, storage_path: Optional[str] = None, **kwargs: dict) -> bool:
         db = self._load_local_vectorstore(storage_path)
         if not db:
             return False
-        
+
         doc_id_list = []
         for doc_id, doc in db.docstore._dict.items():
-            is_match = all([doc.metadata.get(key) == value for key, value in filter.items()])
+            is_match = all(doc.metadata.get(key) == value for key, value in filter.items())
             if is_match:
                 doc_id_list.append(doc_id)
 
@@ -71,10 +102,10 @@ class FaissDB(VectorDatabaseBase):
             db.delete(doc_id_list)
             db.save_local(storage_path or self.storage_path)
             return True
-        
+
         return False
 
-    def clear(self, storage_path: Optional[str] = None, **kwargs):
+    def clear(self, storage_path: Optional[str] = None, **kwargs: dict) -> None:
         db = self._load_local_vectorstore(storage_path)
         if db:
             indexes = list(db.index_to_docstore_id.values())
@@ -82,12 +113,12 @@ class FaissDB(VectorDatabaseBase):
                 db.delete(indexes)
                 db.save_local(storage_path or self.storage_path)
 
-    def _load_local_vectorstore(self, storage_path: Optional[str] = None):
+    def _load_local_vectorstore(self, storage_path: Optional[str] = None) -> Optional[FAISS]:
         path = storage_path or self.storage_path
         if os.path.exists(path):
             return FAISS.load_local(
                 folder_path=self.storage_path,
                 embeddings=self.embeddings,
-                allow_dangerous_deserialization=True
+                allow_dangerous_deserialization=True,
             )
         return None

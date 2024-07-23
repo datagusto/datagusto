@@ -177,6 +177,9 @@ def get_metadata_form():
                             st.session_state.found_tables = []
                         st.session_state.found_tables = tables
                         st.session_state.succeed_query = True
+                        if len(tables) == 0:
+                            st.warning("No relevant data was found.")
+                            st.session_state.succeed_query = False
                     else:
                         st.error(f"Error getting results:\n\n{result}")
                         st.session_state.succeed_query = False
@@ -227,45 +230,58 @@ def get_metadata_form():
 
         tid = st.session_state.current_table_name
         if tid is not None:
+            table_name = found_tables[tid]["table_name"]
             with st.form("join_data"):
                 tid = st.session_state.current_table_name
                 data_source_id = found_tables[tid]["data_source_id"]
-                table_name = found_tables[tid]["table_name"]
-                
+
                 with st.spinner():
-                    result = join_data(data_source_id=data_source_id, table_name=table_name)
-                    status_code = result.pop("status_code", 200)
+                    if "mapped_data" not in st.session_state:
+                        result = join_data(data_source_id=data_source_id, table_name=table_name)
+                        status_code = result.pop("status_code", 200)
 
-                    if status_code == 200:
-                        df = pd.read_json(result["data"], orient="records")
-                        if "mapped_data" not in st.session_state:
-                            st.session_state.mapped_data = pd.DataFrame()
-                        st.session_state.mapped_data = df
+                        if status_code == 200:
+                            if "mapped_data" not in st.session_state:
+                                st.session_state.mapped_data = []
 
-                        st.write("The following mappable data was found")
-                        for _, v in result["joinable_info"].items():
-                            for k in v:
-                                st.write(f"- {k}")
+                            for target_data_source_id, tables in result["data"].items():
+                                for target_table_name, info in tables.items():
+                                    # convert back json to DataFrame
+                                    info["data"] = pd.read_json(info["data"], orient="records")
+
+                                    st.session_state.mapped_data.append({
+                                        "table_name": target_table_name,
+                                        "joinable_columns": [t[-1] for t in info["columns"]],
+                                        "data": info["data"]
+                                    })
+                        else:
+                            st.error(f"Error getting results:\n\n{result}")
+
+                    if "mapped_data" in st.session_state:
+                        st.write("#### The following mappable data was found")
+                        for item in st.session_state.mapped_data:
+                            st.write(f"##### {item['table_name']}")
+                            st.write(f"- joinable columns: ({item['joinable_columns']})")
                     else:
                         st.error(f"Error getting results:\n\n{result}")
 
                 st.write(f"Do you want to integrate {table_name} with those data?")
                 mapping_data_button = st.form_submit_button("Execute data mapping")
                 
-                if mapping_data_button:
-                    st.session_state.succeed_mapping = True
-                    st.write("Preview data (first 10 records)")
-                    st.dataframe(st.session_state.mapped_data.head(10))
+            if mapping_data_button:
+                st.session_state.succeed_mapping = True
+                st.write("Preview data (first 10 records)")
+                for item in st.session_state.mapped_data:
+                    st.write(f"Table: {item['table_name']}")
+                    st.dataframe(item['data'].head(10))
 
-            if st.session_state.succeed_mapping:
-                mapped_data = st.session_state.mapped_data
-                csv = mapped_data.to_csv(index=False)
-                st.download_button(
-                    label="Download as CSV",
-                    data=csv,
-                    file_name="data.csv",
-                    mime="text/csv"
-                )
+                    csv = item['data'].to_csv(index=False)
+                    st.download_button(
+                        label=f"Download as CSV ({item['table_name']})",
+                        data=csv,
+                        file_name=f"{table_name}_{item['table_name']}_data.csv",
+                        mime="text/csv"
+                    )
 
 
 def create_download_data(data_source_id, table_name):
