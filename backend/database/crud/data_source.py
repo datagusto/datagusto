@@ -16,7 +16,10 @@ def get_data_source(db: Session, data_source_id: int, user_id: int) -> data_sour
         raise Exception("Access Denied")
 
     data_source = db.query(models.DataSource).filter(models.DataSource.id == data_source_id).first()
-    return data_source_schema.DataSource.from_orm(data_source) if data_source else None
+    if not data_source:
+        raise Exception(f"DataSource ID: {data_source_id} not found")
+
+    return data_source_schema.DataSource.from_orm(data_source)
 
 
 def get_data_sources(

@@ -54,6 +54,6 @@ class VectorDatabaseBase(ABC):
         raise NotImplementedError
 
     def _add_filter_attribute(self, filter: Optional[dict], attribute: str, value: int) -> dict:
-        filter = filter or {}
+        filter = filter.copy() if filter else {}
         filter.setdefault(attribute, value)
         return filter

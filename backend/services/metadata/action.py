@@ -97,9 +97,6 @@ def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
 def _get_metadata(data_source_id: int, user_id: int, db: Session) -> tuple[dict, str]:
     logger.debug("Starting to get metadata from data source: data_source_id=%s", data_source_id)
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
-    if not data_source:
-        logger.warning("data_source_id: %s not found", data_source_id)
-        raise Exception(f"DataSource ID: {data_source_id} not found")
 
     factory = DataSourceFactory(
         adapter_name=data_source.type,

@@ -1,4 +1,3 @@
-from operator import and_
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -41,10 +40,7 @@ def get_database_information(
     database_information = (
         db.query(models.DatabaseInformation)
         .filter(
-            and_(
-                models.DatabaseInformation.data_source_id == data_source_id,
-                models.DatabaseInformation.owner_id == user_id,
-            ),
+            models.DatabaseInformation.data_source_id == data_source_id,
         )
         .all()
     )
@@ -58,7 +54,6 @@ def delete_database_information(db: Session, data_source_id: int, user_id: int) 
         db.query(models.DatabaseInformation)
         .filter(
             models.DatabaseInformation.data_source_id == data_source_id,
-            models.DatabaseInformation.owner_id == user_id,
         )
         .first()
     )
