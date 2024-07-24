@@ -34,7 +34,7 @@ lint.ignore = [
 ]
 include = [
     "pyproject.toml",
-    "./core/",
+    "./core/**/*/*.py",
     "./database/**/*.py",
     "./endpoints/**/*.py",
     "./schemas/**/*.py",
@@ -64,3 +64,9 @@ extend-immutable-calls = [
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.mypy]
+python_version = "3.9"
+no_strict_optional = true
+#ignore_missing_imports = true
+check_untyped_defs = true

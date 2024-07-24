@@ -34,22 +34,21 @@ class CustomEmbedding(Embeddings):
     model_name: str = DEFAULT_MODEL_NAME
     """Model name to use."""
     cache_folder: Optional[str] = None
-    """Path to store models. 
+    """Path to store models.
     Can be also set by SENTENCE_TRANSFORMERS_HOME environment variable."""
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
         """Initialize the sentence_transformer."""
         super().__init__(**kwargs)
 
-        self.model_kwargs = {'device': USE_GPU}
+        self.model_kwargs = {"device": USE_GPU}
 
-        self.client = SentenceTransformer(
-            self.model_name, cache_folder=self.cache_folder, **self.model_kwargs
-        )
+        self.client = SentenceTransformer(self.model_name, cache_folder=self.cache_folder, **self.model_kwargs)
 
     class Config:
         """Configuration for this pydantic object."""
+
         extra = Extra.forbid
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
@@ -61,12 +60,9 @@ class CustomEmbedding(Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
-        import sentence_transformers
 
-        texts = list(map(lambda x: x.replace("\n", " "), texts))
-        embeddings = self.client.encode(
-            texts, show_progress_bar=False
-        )
+        texts = list(map(lambda x: x.replace("\n", " "), texts))  # noqa: C417
+        embeddings = self.client.encode(texts, show_progress_bar=False)
 
         return embeddings.tolist()
 

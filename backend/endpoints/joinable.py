@@ -1,5 +1,4 @@
 from logging import getLogger
-from typing import Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -33,12 +32,17 @@ def post_joinable_table_join_data(
     body: join_schema.JoinableTableJoinData,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> dict[str, Union[str, dict, None]]:
+) -> dict[str, dict[int, dict]]:
     logger.info("Joining data")
     data_source_id = body.data_source_id
     table_name = body.table_name
-    merged_df, joinable_info = join_data(data_source_id, current_user.id, table_name, db)
+    merged_dfs = join_data(data_source_id, current_user.id, table_name, db)
+    for target_data_source_id, tables in merged_dfs.items():
+        for table_name, info in tables.items():
+            logger.info(f"Target data source: {target_data_source_id}, table: {table_name}")
+            # Convert DataFrame to JSON
+            info["data"] = info["data"].to_json(orient="records")
 
-    response_body = {"data": merged_df.to_json(orient="records"), "joinable_info": joinable_info}
+    response_body = {"data": merged_dfs}
 
     return response_body

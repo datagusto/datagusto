@@ -18,3 +18,9 @@ pipenv run ruff format ${lint_files[@]}
 
 # ruff check
 pipenv run ruff check ${lint_files[@]} --fix
+
+# mypy
+pipenv run mypy ${lint_files[@]}
+
+# ruff with unsafe-fixes
+# pipenv run ruff check ${lint_files[@]} --fix --unsafe-fixes

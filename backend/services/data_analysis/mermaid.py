@@ -4,8 +4,8 @@ import re
 class MermaidERD:
     def __init__(self, title: str = "Entity Relationship Diagram") -> None:
         self.title = title
-        self.entities = []
-        self.relationships = []
+        self.entities: list[str] = []
+        self.relationships: list[str] = []
 
     def add_entity(self, entity_name: str, attributes: list[dict]) -> None:
         attr_str = "\n  ".join(self.sanitize_attributes(attributes))

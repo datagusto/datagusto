@@ -3,6 +3,7 @@ from logging import getLogger
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from core.abac.check import get_accessible_resource_ids
 from core.data_source_adapter.factory import DataSourceFactory
 from core.vector_db_adapter.factory import VectorDatabaseFactory
 from database.crud import data_source as data_source_crud
@@ -53,9 +54,10 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> Non
 
 
 def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
+    shared_data_source_ids = get_accessible_resource_ids(db, user_id)
     factory = VectorDatabaseFactory()
     vector_db_client = factory.get_vector_database()
-    result = vector_db_client.query(query, user_id=user_id, top_k=10)
+    result = vector_db_client.query(query, user_id=user_id, shared_data_source_ids=shared_data_source_ids, top_k=10)
     logger.info(f"Search result for {query} is : {result}")
 
     data_sources = {
@@ -95,9 +97,6 @@ def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
 def _get_metadata(data_source_id: int, user_id: int, db: Session) -> tuple[dict, str]:
     logger.debug("Starting to get metadata from data source: data_source_id=%s", data_source_id)
     data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
-    if not data_source:
-        logger.warning("data_source_id: %s not found", data_source_id)
-        raise Exception(f"DataSource ID: {data_source_id} not found")
 
     factory = DataSourceFactory(
         adapter_name=data_source.type,
