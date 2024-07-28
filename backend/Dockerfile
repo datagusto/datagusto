@@ -15,7 +15,7 @@ RUN echo "Etc/UTC" > /etc/timezone
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && apt install software-properties-common curl -y
 RUN add-apt-repository ppa:deadsnakes/ppa -y
-RUN apt update && apt install python3.9 python3.9-distutils -y
+RUN apt update && apt install python3.9 python3.9-dev python3.9-distutils -y
 RUN curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && python3.9 /tmp/get-pip.py
 
 # Install/Upgrade necessary packages

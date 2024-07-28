@@ -1,44 +1,43 @@
-from typing import Optional
-
 from pydantic import BaseModel
 
 
-class MySQLConfig(BaseModel):
+class SqlConfig(BaseModel):
     host: str
     port: int
     username: str
     password: str
     database: str
 
-    @property
-    def host_port(self) -> str:
-        return f"{self.host}:{self.port}"
-
-
-class PostgreSQLConfig(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    dbname: str
-    schema: Optional[str]
+    def connector_type(self) -> str:
+        return ""
 
     @property
-    def host_port(self) -> str:
-        return f"{self.host}:{self.port}"
+    def uri(self) -> str:
+        return f"{self.connector_type()}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
 
 
-class OracleConfig(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    dbname: str
-    schema: Optional[str]
+class MySqlConfig(SqlConfig):
+    def connector_type(self) -> str:
+        return "mysql+mysqlconnector"
+
+
+class PostgreSqlConfig(SqlConfig):
+    schema: str = "public"
+    def connector_type(self) -> str:
+        return "postgresql+psycopg2"
+
+
+class OracleConfig(SqlConfig):
+    schema: str = "system"
+
+    def connector_type(self) -> str:
+        return "oracle+oracledb"
+        # return "oracle+cx_oracle"
 
     @property
-    def dsn(self) -> str:
-        return f"{self.host}:{self.port}/{self.dbname}"
+    def uri(self) -> str:
+        return (f"{self.connector_type()}://{self.username}:{self.password}"
+                f"@{self.host}:{self.port}/?service_name={self.database}")
 
 
 class FileConfig(BaseModel):
