@@ -18,8 +18,7 @@ class DataSourceBase(ABC):
             raise ValueError("Invalid config data.")
         self.post_init()
 
-    @classmethod
-    def post_init(self) -> None:
+    def post_init(self) -> None:  # noqa: B027
         pass
 
     @abstractmethod

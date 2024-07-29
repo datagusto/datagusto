@@ -265,8 +265,6 @@ def add_data_source_form(default_port, selected_db_type):
                     }
                     if dtype in ["postgresql", "oracle"]:
                         connection["schema"] = schema
-                        connection["dbname"] = connection.pop("database")
-                        connection["user"] = connection.pop("username")
                     result = conn.test_data_source_connection(name, dtype, description, connection)
 
                 status_code = result.pop("status_code", 200)
@@ -298,8 +296,6 @@ def add_data_source_form(default_port, selected_db_type):
                     }
                     if dtype in ["postgresql", "oracle"]:
                         connection["schema"] = schema
-                        connection["dbname"] = connection.pop("database")
-                        connection["user"] = connection.pop("username")
                     result = conn.create_data_source(name, dtype, description, connection)
                 status_code = result.pop("status_code", 200)
 
