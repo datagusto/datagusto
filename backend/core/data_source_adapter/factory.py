@@ -2,9 +2,9 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from .adapters.file import FileDataSource
-from .adapters.mysql import MySQLDataSource
-from .adapters.oracle import OracleDataSource
-from .adapters.postgres import PostgreSQLDataSource
+from .adapters.sql.mysql import MySqlAdapter
+from .adapters.sql.oracle import OracleAdapter
+from .adapters.sql.postgres import PostgreSqlAdapter
 from .types import DataSourceType
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 logger = getLogger("uvicorn.app")
 
 ADAPTERS = {
-    DataSourceType.PostgreSQL: PostgreSQLDataSource,
+    DataSourceType.PostgreSQL: PostgreSqlAdapter,
     DataSourceType.BigQuery: None,
     DataSourceType.Snowflake: None,
     DataSourceType.Redshift: None,
@@ -21,10 +21,10 @@ ADAPTERS = {
     DataSourceType.DuckDB: None,
     DataSourceType.MicrosoftSQLServer: None,
     DataSourceType.MongoDB: None,
-    DataSourceType.Oracle: OracleDataSource,
+    DataSourceType.Oracle: OracleAdapter,
     DataSourceType.SAPHana: None,
     DataSourceType.SQLite: None,
-    DataSourceType.MySQL: MySQLDataSource,
+    DataSourceType.MySQL: MySqlAdapter,
     DataSourceType.Gorgias: None,
     DataSourceType.SpreadSheet: None,
     DataSourceType.Notion: None,

@@ -130,7 +130,11 @@ def join_data(
 
             merged_dfs[target_data_source_id][target_table_name] = {}
             merged_dfs[target_data_source_id][target_table_name]["data"] = pd.merge(
-                source_data_df, target_data_df, how="left", left_on=left_on, right_on=right_on,
+                source_data_df,
+                target_data_df,
+                how="left",
+                left_on=left_on,
+                right_on=right_on,
             )
             merged_dfs[target_data_source_id][target_table_name]["columns"] = joinable_info[target_data_source_id][
                 target_table_name

@@ -143,6 +143,17 @@ def set_current_table_name():
     st.session_state.current_table_name = table_name_option_selected
 
 
+def clear_worksheet():
+    st.session_state.my_prompt = ""
+    if "found_tables" in st.session_state:
+        del st.session_state["found_tables"]
+    if "current_table_name" in st.session_state:
+        del st.session_state["current_table_name"]
+    if "mapped_data" in st.session_state:
+        del st.session_state["mapped_data"]
+    st.session_state.succeed_query = False
+    st.session_state.succeed_mapping = False
+
 def get_metadata_form():
     username = get_user_name()
     data_source_id = ""
@@ -155,7 +166,9 @@ def get_metadata_form():
     if "succeed_query" not in st.session_state:
         st.session_state.succeed_query = False
 
-    with st.form("get_metadata"):        
+    st.button("Clear data", on_click=clear_worksheet)
+
+    with st.form("get_metadata"):
         st.text_area("What do you want to do with your data? / What data do you want?", key="my_prompt")
 
         query_metadata_button = st.form_submit_button("Discover data")

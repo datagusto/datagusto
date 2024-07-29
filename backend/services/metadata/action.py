@@ -31,8 +31,11 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> Non
             logger.info(f"Generated column description: {column['description']}")
 
     # save metadata to db
-    logger.info("Saving metadata to the database")
-    _save_metadata(data_source_id, user_id, database_name, tables_columns, db)
+    if len(tables_columns) > 0:
+        logger.info("Saving metadata to the database")
+        _save_metadata(data_source_id, user_id, database_name, tables_columns, db)
+    else:
+        logger.info("No metadata to save to the database")
 
     # save embedded metadata to vectordb
     logger.info("Saving metadata to VectorDB")
@@ -48,9 +51,12 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> Non
             ],
         )
     docs = generate_docs_from_columns(all_columns, database_name, data_source_id, user_id)
-    factory = VectorDatabaseFactory()
-    vector_db_client = factory.get_vector_database()
-    vector_db_client.save(docs)
+    if len(docs) > 0:
+        factory = VectorDatabaseFactory()
+        vector_db_client = factory.get_vector_database()
+        vector_db_client.save(docs)
+    else:
+        logger.info("No metadata to save to VectorDB")
 
 
 def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:

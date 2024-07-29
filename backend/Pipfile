@@ -42,6 +42,7 @@ python-jose = "*"
 langchain-community = "*"
 sentencepiece = "*"
 oracledb = "*"
+cx_oracle = "*"
 
 [dev-packages]
 isort = "*"
