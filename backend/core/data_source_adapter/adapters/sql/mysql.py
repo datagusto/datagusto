@@ -2,13 +2,13 @@ from logging import getLogger
 
 from sqlalchemy import create_engine
 
-from .base import SqlBase
 from ...config import MySqlConfig
+from .base import SqlBase
 
 logger = getLogger()
 
 COLUMN_INFORMATION_SQL = """
-SELECT 
+SELECT
     COLUMN_NAME as 'column_name', COLUMN_TYPE as 'column_type', EXTRA as 'extra', COLUMN_COMMENT as 'comment'
 FROM
     information_schema.COLUMNS
@@ -31,15 +31,14 @@ WHERE
 
 
 class MySqlAdapter(SqlBase):
-
     def post_init(self) -> None:
         self.sql_config = MySqlConfig(**self.config)
         self.engine = create_engine(self.sql_config.uri)
         self.query_column_information = COLUMN_INFORMATION_SQL.format(
             database_name=self.get_database_name(),
-            table_name="{table_name}"
+            table_name="{table_name}",
         )
         self.query_relationship_information = RELATIONSHIP_INFORMATION_SQL.format(
             database_name=self.get_database_name(),
-            table_name="{table_name}"
+            table_name="{table_name}",
         )

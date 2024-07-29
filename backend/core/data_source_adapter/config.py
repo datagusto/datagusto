@@ -23,6 +23,7 @@ class MySqlConfig(SqlConfig):
 
 class PostgreSqlConfig(SqlConfig):
     schema: str = "public"
+
     def connector_type(self) -> str:
         return "postgresql+psycopg2"
 
@@ -36,8 +37,10 @@ class OracleConfig(SqlConfig):
 
     @property
     def uri(self) -> str:
-        return (f"{self.connector_type()}://{self.username}:{self.password}"
-                f"@{self.host}:{self.port}/?service_name={self.database}")
+        return (
+            f"{self.connector_type()}://{self.username}:{self.password}"
+            f"@{self.host}:{self.port}/?service_name={self.database}"
+        )
 
 
 class FileConfig(BaseModel):

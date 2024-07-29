@@ -2,8 +2,8 @@ from logging import getLogger
 
 from sqlalchemy import create_engine
 
-from .base import SqlBase
 from ...config import PostgreSqlConfig
+from .base import SqlBase
 
 logger = getLogger()
 
@@ -40,21 +40,20 @@ WHERE constraint_type = 'FOREIGN KEY'
 
 
 class PostgreSqlAdapter(SqlBase):
-
     def post_init(self) -> None:
         self.sql_config = PostgreSqlConfig(**self.config)
         self.engine = create_engine(self.sql_config.uri)
         self.query_show_all_tables = TABLES_SQL.format(
             database_schema=self.sql_config.schema,
-            database_name=self.sql_config.database
+            database_name=self.sql_config.database,
         )
         self.query_column_information = COLUMN_INFORMATION_SQL.format(
             database_schema=self.sql_config.schema,
             table_name="{table_name}",
-            database_name=self.sql_config.database
+            database_name=self.sql_config.database,
         )
         self.query_relationship_information = RELATIONSHIP_INFORMATION_SQL.format(
             database_schema=self.sql_config.schema,
             table_name="{table_name}",
-            database_name=self.sql_config.database
+            database_name=self.sql_config.database,
         )

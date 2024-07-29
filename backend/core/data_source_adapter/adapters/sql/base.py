@@ -3,8 +3,8 @@ from logging import getLogger
 
 from sqlalchemy import text
 
-from ..base import DataSourceBase
 from ...config import SqlConfig
+from ..base import DataSourceBase
 
 logger = getLogger()
 
@@ -41,9 +41,7 @@ class SqlBase(DataSourceBase, ABC):
 
     def execute_query(self, query: str) -> list[tuple]:
         with self.engine.connect() as connection:
-            result = connection.execute(
-                text(query)
-            )
+            result = connection.execute(text(query))
             return result.fetchall()
 
     def get_columns_of_table(self, table: str) -> list[dict]:
@@ -71,11 +69,9 @@ class SqlBase(DataSourceBase, ABC):
         relationship_info = []
         for relationship in relationships:
             column_name, ref_table_name, ref_column_name = relationship
-            relationship_info.append({
-                "column_name": column_name,
-                "ref_table_name": ref_table_name,
-                "ref_column_name": ref_column_name
-            })
+            relationship_info.append(
+                {"column_name": column_name, "ref_table_name": ref_table_name, "ref_column_name": ref_column_name},
+            )
         return relationship_info
 
     def get_all_columns(self) -> dict:
@@ -92,10 +88,12 @@ class SqlBase(DataSourceBase, ABC):
                 # _, ref_table_name, ref_column_name = next(
                 relationship = next((r for r in relationships if column_name == r["column_name"]), None)
                 if relationship:
-                    column_info.update({
-                        "referenced_table_name": relationship["ref_table_name"],
-                        "referenced_column_name": relationship["ref_column_name"]
-                    })
+                    column_info.update(
+                        {
+                            "referenced_table_name": relationship["ref_table_name"],
+                            "referenced_column_name": relationship["ref_column_name"],
+                        },
+                    )
                     del relationship
 
                 all_columns.setdefault(table, []).append(column_info)

@@ -2,8 +2,8 @@ from logging import getLogger
 
 from sqlalchemy import create_engine
 
-from .base import SqlBase
 from ...config import OracleConfig
+from .base import SqlBase
 
 logger = getLogger()
 
@@ -39,21 +39,18 @@ SELECT UCC2.COLUMN_NAME AS "column_name",
 
 
 class OracleAdapter(SqlBase):
-
     def post_init(self) -> None:
         self.sql_config = OracleConfig(**self.config)
         self.engine = create_engine(self.sql_config.uri)
-        self.query_show_all_tables = TABLES_SQL.format(
-            tablespace_name=self.sql_config.schema.upper()
-        )
+        self.query_show_all_tables = TABLES_SQL.format(tablespace_name=self.sql_config.schema.upper())
         self.query_column_information = COLUMN_INFORMATION_SQL.format(
             table_name="{table_name}",
-            user_name=self.sql_config.username.upper()
+            user_name=self.sql_config.username.upper(),
         )
         self.query_relationship_information = RELATIONSHIP_INFORMATION_SQL.format(
             database_schema=self.sql_config.schema,
             table_name="{table_name}",
-            database_name=self.sql_config.database
+            database_name=self.sql_config.database,
         )
 
     def get_all_tables(self) -> list[str]:
@@ -62,7 +59,15 @@ class OracleAdapter(SqlBase):
         # filter out system tables
         table_names = []
         for table_name in all_table_names:
-            if table_name.startswith("BIN$") or table_name.startswith("MVIEW$_") or table_name.startswith("AQ$_"):
+            if (
+                table_name.startswith("BIN$")
+                or table_name.startswith("MVIEW$_")
+                or table_name.startswith("AQ$_")
+                or table_name.startswith("LOGMNRGGC_")
+                or table_name.startswith("LOGMNR_")
+                or table_name.startswith("ROLLING$")
+                or table_name.startswith("LOGSTDBY$")
+            ):
                 continue
             if table_name in [
                 "HELP",
@@ -73,7 +78,6 @@ class OracleAdapter(SqlBase):
                 continue
             table_names.append(table_name)
         return table_names
-
 
     def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
         query = f"SELECT {column} FROM {table} FETCH FIRST {limit} ROWS ONLY"  # noqa: S608
