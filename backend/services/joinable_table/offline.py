@@ -77,10 +77,13 @@ def indexing(data_source_id: int, user_id: int, db: Session) -> None:
 
     # save index
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    docs = text_splitter.split_documents(docs)
-    factory = VectorDatabaseFactory()
-    vector_db_join_client = factory.get_vector_database_join()
-    vector_db_join_client.save(docs)
+    if len(docs) > 0:
+        docs = text_splitter.split_documents(docs)
+        factory = VectorDatabaseFactory()
+        vector_db_join_client = factory.get_vector_database_join()
+        vector_db_join_client.save(docs)
+    else:
+        logger.info("No data to save to the index.")
 
     # tokenize texts
     # inputs = tokenizer(repository_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
