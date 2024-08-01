@@ -19,3 +19,5 @@ backend/*.env
 docker-volume/*
 /.env
 /.env.*
+/datasource/sqlite/*
+!/datasource/sqlite/.gitkeep

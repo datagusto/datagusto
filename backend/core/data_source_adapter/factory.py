@@ -5,6 +5,7 @@ from .adapters.file import FileDataSource
 from .adapters.sql.mysql import MySqlAdapter
 from .adapters.sql.oracle import OracleAdapter
 from .adapters.sql.postgres import PostgreSqlAdapter
+from .adapters.sql.sqlite import SqliteAdapter
 from .types import DataSourceType
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ ADAPTERS = {
     DataSourceType.MongoDB: None,
     DataSourceType.Oracle: OracleAdapter,
     DataSourceType.SAPHana: None,
-    DataSourceType.SQLite: None,
+    DataSourceType.SQLite: SqliteAdapter,
     DataSourceType.MySQL: MySqlAdapter,
     DataSourceType.Gorgias: None,
     DataSourceType.SpreadSheet: None,

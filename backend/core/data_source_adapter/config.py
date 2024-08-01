@@ -1,3 +1,5 @@
+import os
+
 from pydantic import BaseModel
 
 
@@ -41,6 +43,19 @@ class OracleConfig(SqlConfig):
             f"{self.connector_type()}://{self.username}:{self.password}"
             f"@{self.host}:{self.port}/?service_name={self.database}"
         )
+
+
+class SqliteConfig(BaseModel):
+    file_name: str
+
+    @property
+    def database(self) -> str:
+        return self.file_name
+
+    @property
+    def uri(self) -> str:
+        DATASOURCE_BASE_PATH = os.getenv("DATASOURCE_BASE_PATH", "/datasource")
+        return f"sqlite:///{DATASOURCE_BASE_PATH}/sqlite/{self.file_name}"
 
 
 class FileConfig(BaseModel):

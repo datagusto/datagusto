@@ -87,15 +87,19 @@ def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
     ]
 
     # Combine responses with the same table name
-    response = {}
-    for r in response_with_duplicated_tables:
-        table_name = r["table_name"]
-        if table_name not in response:
-            response[table_name] = r
-        else:
-            response[table_name]["column_description"].extend(r["column_description"])
+    response_list = []
+    for data_source_id, data_source_name in data_sources.items():
+        response = {}
+        for r in response_with_duplicated_tables:
+            if r["data_source_id"] != data_source_id:
+                table_name = r["table_name"]
+                if table_name not in response:
+                    response[table_name] = r
+                else:
+                    response[table_name]["column_description"].extend(r["column_description"])
+        response_list.append(response)
 
-    response = _get_sample_data_from_tables(db, list(response.values()), user_id)
+    response = _get_sample_data_from_tables(db, response_list, user_id)
 
     return response
 
@@ -158,39 +162,40 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     metadata_crud.create_database_information(db, database_information, user_id)
 
 
-def _get_sample_data_from_tables(db: Session, response: list, user_id: int) -> list[dict]:
+def _get_sample_data_from_tables(db: Session, response_list: list, user_id: int) -> list[dict]:
     # get sample data for each table
-    for r in response:
-        data_source_id = r["data_source_id"]
-        table_name = r["table_name"]
-        data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
+    for response in response_list:
+        for r in list(response.values()):
+            data_source_id = r["data_source_id"]
+            table_name = r["table_name"]
+            data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
 
-        try:
-            factory = DataSourceFactory(
-                adapter_name=data_source.type,
-                name=data_source.name,
-                description=data_source.description,
-                connection=data_source.connection,
-            )
-            connection = factory.get_data_source()
-            table_information = data_source_crud.get_table(db, data_source_id, table_name, user_id)
-            columns = [col["column_name"] for col in table_information.table_info.get("columns")]
-            sample_data = connection.select_table(table_name, limit=5)
-            df = pd.DataFrame(sample_data, columns=columns)
-        except Exception as e:
-            logger.error("Failed to get sample data for table: %s", table_name)
-            logger.exception(e)
-            continue
+            try:
+                factory = DataSourceFactory(
+                    adapter_name=data_source.type,
+                    name=data_source.name,
+                    description=data_source.description,
+                    connection=data_source.connection,
+                )
+                connection = factory.get_data_source()
+                table_information = data_source_crud.get_table(db, data_source_id, table_name, user_id)
+                columns = [col["column_name"] for col in table_information.table_info.get("columns")]
+                sample_data = connection.select_table(table_name, limit=5)
+                df = pd.DataFrame(sample_data, columns=columns)
+            except Exception as e:
+                logger.error("Failed to get sample data for table: %s", table_name)
+                logger.exception(e)
+                continue
 
-        binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
-        for column in binary_columns:
-            df[column] = df[column].apply(encode_binary)
+            binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
+            for column in binary_columns:
+                df[column] = df[column].apply(encode_binary)
 
-        r["sample_data"] = df.to_json(orient="records")
+            r["sample_data"] = df.to_json(orient="records")
 
-        logger.info(f"r: {r}")
+            logger.info(f"r: {r}")
 
-    return response
+    return response_list
 
 
 def delete_metadata(db: Session, data_source_id: int, user_id: int) -> None:
