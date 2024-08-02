@@ -59,7 +59,7 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> Non
         logger.info("No metadata to save to VectorDB")
 
 
-def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
+def query_metadata(db: Session, query: str, user_id: int) -> dict[int, dict]:
     shared_data_source_ids = get_accessible_resource_ids(db, user_id)
     factory = VectorDatabaseFactory()
     vector_db_client = factory.get_vector_database()
@@ -87,19 +87,18 @@ def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
     ]
 
     # Combine responses with the same table name
-    response_list = []
-    for data_source_id, data_source_name in data_sources.items():
-        response = {}
-        for r in response_with_duplicated_tables:
-            if r["data_source_id"] != data_source_id:
-                table_name = r["table_name"]
-                if table_name not in response:
-                    response[table_name] = r
-                else:
-                    response[table_name]["column_description"].extend(r["column_description"])
-        response_list.append(response)
+    response = {}
+    for r in response_with_duplicated_tables:
+        if r["data_source_id"] not in response:
+            response[r["data_source_id"]] = {}
 
-    response = _get_sample_data_from_tables(db, response_list, user_id)
+        table_name = r["table_name"]
+        if table_name not in response[r["data_source_id"]]:
+            response[r["data_source_id"]][table_name] = r
+        else:
+            response[r["data_source_id"]][table_name]["column_description"].extend(r["column_description"])
+
+    response = _get_sample_data_from_tables(db, response, user_id)
 
     return response
 
@@ -162,11 +161,10 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     metadata_crud.create_database_information(db, database_information, user_id)
 
 
-def _get_sample_data_from_tables(db: Session, response_list: list, user_id: int) -> list[dict]:
+def _get_sample_data_from_tables(db: Session, response: dict, user_id: int) -> dict:
     # get sample data for each table
-    for response in response_list:
-        for r in list(response.values()):
-            data_source_id = r["data_source_id"]
+    for data_source_id, res in response.items():
+        for r in list(res.values()):
             table_name = r["table_name"]
             data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
 
@@ -195,7 +193,7 @@ def _get_sample_data_from_tables(db: Session, response_list: list, user_id: int)
 
             logger.info(f"r: {r}")
 
-    return response_list
+    return response
 
 
 def delete_metadata(db: Session, data_source_id: int, user_id: int) -> None:

@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from .adapters.file import FileDataSource
+from .adapters.sql.duckdb import DuckDBAdapter
 from .adapters.sql.mysql import MySqlAdapter
 from .adapters.sql.oracle import OracleAdapter
 from .adapters.sql.postgres import PostgreSqlAdapter
@@ -19,7 +20,7 @@ ADAPTERS = {
     DataSourceType.Snowflake: None,
     DataSourceType.Redshift: None,
     DataSourceType.Databricks: None,
-    DataSourceType.DuckDB: None,
+    DataSourceType.DuckDB: DuckDBAdapter,
     DataSourceType.MicrosoftSQLServer: None,
     DataSourceType.MongoDB: None,
     DataSourceType.Oracle: OracleAdapter,

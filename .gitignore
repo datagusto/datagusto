@@ -21,3 +21,5 @@ docker-volume/*
 /.env.*
 /datasource/sqlite/*
 !/datasource/sqlite/.gitkeep
+/datasource/duckdb/*
+!/datasource/duckdb/.gitkeep

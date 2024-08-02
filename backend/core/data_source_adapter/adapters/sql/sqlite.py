@@ -2,25 +2,25 @@ from logging import getLogger
 
 from sqlalchemy import create_engine
 
-from ...config import MySqlConfig, SqliteConfig
-from .base import SqlBase
+from ...config import SqliteConfig
+from .base import SqlFileServerBase
 
 logger = getLogger()
 
 TABLES_SQL = """
-SELECT name 
-FROM sqlite_master 
-WHERE type='table' 
+SELECT name
+FROM sqlite_master
+WHERE type='table'
     AND name NOT LIKE 'sqlite_%'
 ORDER BY name
 """
 
 COLUMN_INFORMATION_SQL = """
-SELECT 
+SELECT
     name as 'column_name',
     type as 'column_type',
-    CASE WHEN pk = 1 THEN 'PRIMARY KEY' 
-         WHEN pk > 1 THEN 'PRIMARY KEY(' || pk || ')' 
+    CASE WHEN pk = 1 THEN 'PRIMARY KEY'
+         WHEN pk > 1 THEN 'PRIMARY KEY(' || pk || ')'
          ELSE '' END ||
     CASE WHEN `notnull` = 1 THEN ' NOT NULL' ELSE '' END ||
     CASE WHEN dflt_value IS NOT NULL THEN ' DEFAULT ' || dflt_value ELSE '' END
@@ -31,7 +31,7 @@ FROM pragma_table_info('{table_name}')
 
 # get relationship information from information_schema
 RELATIONSHIP_INFORMATION_SQL = """
-SELECT 
+SELECT
     "from" as column_name,
     "table" as referenced_table_name,
     "to" as referenced_column_name
@@ -39,15 +39,7 @@ FROM pragma_foreign_key_list('{table_name}')
 """
 
 
-class SqliteAdapter(SqlBase):
-
-    def validate_config(self) -> bool:
-        try:
-            SqliteConfig(**self.config)
-        except Exception:
-            return False
-        return True
-
+class SqliteAdapter(SqlFileServerBase):
     def post_init(self) -> None:
         self.sql_config = SqliteConfig(**self.config)
         self.engine = create_engine(self.sql_config.uri)
