@@ -59,45 +59,38 @@ def get_and_save_metadata(db: Session, data_source_id: int, user_id: int) -> Non
         logger.info("No metadata to save to VectorDB")
 
 
-def query_metadata(db: Session, query: str, user_id: int) -> list[dict]:
+def query_metadata(db: Session, query: str, user_id: int) -> dict[int, dict]:
     shared_data_source_ids = get_accessible_resource_ids(db, user_id)
-    factory = VectorDatabaseFactory()
-    vector_db_client = factory.get_vector_database()
+    vector_db_client = VectorDatabaseFactory().get_vector_database()
     result = vector_db_client.query(query, user_id=user_id, shared_data_source_ids=shared_data_source_ids, top_k=10)
     logger.info(f"Search result for {query} is : {result}")
 
     data_sources = {
-        r.metadata.get("data_source_id"): data_source_crud.get_data_source(
-            db,
-            r.metadata.get("data_source_id"),
-            user_id=user_id,
-        ).name
+        r.metadata["data_source_id"]: data_source_crud.get_data_source(db, r.metadata["data_source_id"], user_id).name
         for r in result
     }
 
-    response_with_duplicated_tables = [
-        {
-            "data_source_id": r.metadata.get("data_source_id"),
-            "data_source_name": data_sources[r.metadata.get("data_source_id")],
-            "database_name": r.metadata.get("database_name"),
-            "table_name": r.metadata.get("table_name"),
-            "column_description": [r.page_content],
-        }
-        for r in result
-    ]
-
-    # Combine responses with the same table name
     response = {}
-    for r in response_with_duplicated_tables:
-        table_name = r["table_name"]
-        if table_name not in response:
-            response[table_name] = r
+    for r in result:
+        data_source_id = r.metadata["data_source_id"]
+        table_name = r.metadata["table_name"]
+        column_description = r.page_content
+
+        if data_source_id not in response:
+            response[data_source_id] = {}
+
+        if table_name not in response[data_source_id]:
+            response[data_source_id][table_name] = {
+                "data_source_id": data_source_id,
+                "data_source_name": data_sources[data_source_id],
+                "database_name": r.metadata["database_name"],
+                "table_name": table_name,
+                "column_description": [column_description],
+            }
         else:
-            response[table_name]["column_description"].extend(r["column_description"])
+            response[data_source_id][table_name]["column_description"].append(column_description)
 
-    response = _get_sample_data_from_tables(db, list(response.values()), user_id)
-
-    return response
+    return _get_sample_data_from_tables(db, response, user_id)
 
 
 def _get_metadata(data_source_id: int, user_id: int, db: Session) -> tuple[dict, str]:
@@ -158,37 +151,37 @@ def _save_metadata(data_source_id: int, user_id: int, database_name: str, all_co
     metadata_crud.create_database_information(db, database_information, user_id)
 
 
-def _get_sample_data_from_tables(db: Session, response: list, user_id: int) -> list[dict]:
+def _get_sample_data_from_tables(db: Session, response: dict, user_id: int) -> dict:
     # get sample data for each table
-    for r in response:
-        data_source_id = r["data_source_id"]
-        table_name = r["table_name"]
-        data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
+    for data_source_id, res in response.items():
+        for r in list(res.values()):
+            table_name = r["table_name"]
+            data_source = data_source_crud.get_data_source(db, data_source_id=data_source_id, user_id=user_id)
 
-        try:
-            factory = DataSourceFactory(
-                adapter_name=data_source.type,
-                name=data_source.name,
-                description=data_source.description,
-                connection=data_source.connection,
-            )
-            connection = factory.get_data_source()
-            table_information = data_source_crud.get_table(db, data_source_id, table_name, user_id)
-            columns = [col["column_name"] for col in table_information.table_info.get("columns")]
-            sample_data = connection.select_table(table_name, limit=5)
-            df = pd.DataFrame(sample_data, columns=columns)
-        except Exception as e:
-            logger.error("Failed to get sample data for table: %s", table_name)
-            logger.exception(e)
-            continue
+            try:
+                factory = DataSourceFactory(
+                    adapter_name=data_source.type,
+                    name=data_source.name,
+                    description=data_source.description,
+                    connection=data_source.connection,
+                )
+                connection = factory.get_data_source()
+                table_information = data_source_crud.get_table(db, data_source_id, table_name, user_id)
+                columns = [col["column_name"] for col in table_information.table_info.get("columns")]
+                sample_data = connection.select_table(table_name, limit=5)
+                df = pd.DataFrame(sample_data, columns=columns)
+            except Exception as e:
+                logger.error("Failed to get sample data for table: %s", table_name)
+                logger.exception(e)
+                continue
 
-        binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
-        for column in binary_columns:
-            df[column] = df[column].apply(encode_binary)
+            binary_columns = df.columns[df.applymap(lambda x: isinstance(x, bytes)).any()]
+            for column in binary_columns:
+                df[column] = df[column].apply(encode_binary)
 
-        r["sample_data"] = df.to_json(orient="records")
+            r["sample_data"] = df.to_json(orient="records")
 
-        logger.info(f"r: {r}")
+            logger.info(f"r: {r}")
 
     return response
 
