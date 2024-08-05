@@ -45,6 +45,7 @@ oracledb = "*"
 cx_oracle = "*"
 duckdb = "*"
 duckdb_engine = "*"
+python-multipart = "*"
 
 [dev-packages]
 isort = "*"

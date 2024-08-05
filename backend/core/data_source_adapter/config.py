@@ -51,7 +51,7 @@ class SqlFileServerConfig(BaseModel):
     @property
     def uri(self) -> str:
         datasource_base_path = os.getenv("DATASOURCE_BASE_PATH", "/datasource")
-        return f"{self.connector_type()}:///{datasource_base_path}/{self.connector_type()}/{self.database}"
+        return f"{self.connector_type()}://{datasource_base_path}/{self.connector_type()}/{self.database}"
 
     @property
     def database(self) -> str:
