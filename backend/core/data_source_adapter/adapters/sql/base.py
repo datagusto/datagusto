@@ -1,9 +1,10 @@
 from abc import ABC
 from logging import getLogger
+from typing import Union
 
 from sqlalchemy import text
 
-from ...config import SqlConfig
+from ...config import SqlConfig, SqlFileServerConfig
 from ..base import DataSourceBase
 
 logger = getLogger()
@@ -11,7 +12,7 @@ logger = getLogger()
 
 class SqlBase(DataSourceBase, ABC):
     engine: any
-    sql_config: SqlConfig
+    sql_config: Union[SqlConfig, SqlFileServerConfig]
 
     query_show_all_tables = "SHOW TABLES"
     query_column_information = ""
@@ -106,3 +107,12 @@ class SqlBase(DataSourceBase, ABC):
     def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
         query = f"SELECT * FROM {table} LIMIT {limit}"  # noqa: S608
         return self.execute_query(query)
+
+
+class SqlFileServerBase(SqlBase, ABC):
+    def validate_config(self) -> bool:
+        try:
+            SqlFileServerConfig(**self.config)
+        except Exception:
+            return False
+        return True

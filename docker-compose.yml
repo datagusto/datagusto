@@ -19,6 +19,7 @@ services:
         volumes:
             - backend-data-db:/usr/src/app/data/db
             - backend-data-files:/usr/src/app/data/files
+            - ./datasource:/usr/src/app/datasource
 
     frontend:
         build:
