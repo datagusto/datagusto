@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 
-data_source_types = ["mysql", "postgresql", "oracle", "file"]
+data_source_types = ["mysql", "postgresql", "oracle", "duckdb", "sqlite", "file"]
 
 class DataSource:
     def __init__(self, owner_id, name, dtype, description, hostname, port, username, password, database_name,\

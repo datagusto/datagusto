@@ -43,6 +43,8 @@ langchain-community = "*"
 sentencepiece = "*"
 oracledb = "*"
 cx_oracle = "*"
+duckdb = "*"
+duckdb_engine = "*"
 
 [dev-packages]
 isort = "*"

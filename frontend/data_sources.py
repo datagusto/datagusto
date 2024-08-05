@@ -229,6 +229,9 @@ def add_data_source_form(default_port, selected_db_type):
                 schema = st.text_input("Schema", value="system")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
+        elif dtype in ["duckdb", "sqlite"]:
+            file_name = st.text_input("File Name")
+            schema = st.text_input("Schema", value="main")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -240,6 +243,8 @@ def add_data_source_form(default_port, selected_db_type):
 
         if dtype == "file":
             mandatory_fields = [name, description, dtype, data_source_file]
+        elif dtype in ["duckdb", "sqlite"]:
+            mandatory_fields = [name, description, dtype, file_name]
         else:
             mandatory_fields = [name, description, dtype, hostname, port, database_name, username, password]
         missing_fields = [field_name for field_name, field_value in
@@ -266,6 +271,12 @@ def add_data_source_form(default_port, selected_db_type):
                     if dtype in ["postgresql", "oracle"]:
                         connection["schema"] = schema
                     result = conn.test_data_source_connection(name, dtype, description, connection)
+                if dtype in ["duckdb", "sqlite"]:
+                    connection = {
+                        "file_name": file_name,
+                        "schema": schema
+                    }
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
 
                 status_code = result.pop("status_code", 200)
 
@@ -286,6 +297,12 @@ def add_data_source_form(default_port, selected_db_type):
                     connection = {}
                     result = conn.create_data_source_as_file(name, dtype, description, connection, data_source_file,
                                                              file_type)
+                if dtype in ["duckdb", "sqlite"]:
+                    connection = {
+                        "file_name": file_name,
+                        "schema": schema
+                    }
+                    result = conn.create_data_source(name, dtype, description, connection)
                 if dtype in ["mysql", "postgresql", "oracle"]:
                     connection = {
                         "host": hostname,

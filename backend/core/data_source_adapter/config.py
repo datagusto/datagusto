@@ -1,3 +1,5 @@
+import os
+
 from pydantic import BaseModel
 
 
@@ -41,6 +43,34 @@ class OracleConfig(SqlConfig):
             f"{self.connector_type()}://{self.username}:{self.password}"
             f"@{self.host}:{self.port}/?service_name={self.database}"
         )
+
+
+class SqlFileServerConfig(BaseModel):
+    file_name: str
+
+    @property
+    def uri(self) -> str:
+        datasource_base_path = os.getenv("DATASOURCE_BASE_PATH", "/datasource")
+        return f"{self.connector_type()}:///{datasource_base_path}/{self.connector_type()}/{self.database}"
+
+    @property
+    def database(self) -> str:
+        return self.file_name
+
+    def connector_type(self) -> str:
+        return ""
+
+
+class SqliteConfig(SqlFileServerConfig):
+    def connector_type(self) -> str:
+        return "sqlite"
+
+
+class DuckDBConfig(SqlFileServerConfig):
+    schema: str = "main"
+
+    def connector_type(self) -> str:
+        return "duckdb"
 
 
 class FileConfig(BaseModel):

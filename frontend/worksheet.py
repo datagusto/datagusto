@@ -185,12 +185,11 @@ def get_metadata_form():
                     if status_code == 200:
                         formatted_json = json.dumps(result, indent=4)
                         # st.code(f"Results:\n\n{formatted_json}")
-                        tables = json.loads(result["text"])
                         if "found_tables" not in st.session_state:
-                            st.session_state.found_tables = []
-                        st.session_state.found_tables = tables
+                            st.session_state.found_tables = {}
+                        st.session_state.found_tables = result
                         st.session_state.succeed_query = True
-                        if len(tables) == 0:
+                        if bool(result) is False:
                             st.warning("No relevant data was found.")
                             st.session_state.succeed_query = False
                     else:
@@ -203,8 +202,11 @@ def get_metadata_form():
     if st.session_state.succeed_query:
         # show select menu of tables
         found_tables = st.session_state.found_tables
-        options_dict = {t["table_name"]: t["table_name"] for t in st.session_state.found_tables}
-        options = list(options_dict.keys())
+
+        found_tables = []
+        for data_source_id, data_dict in st.session_state.found_tables.items():
+            for table, d_dict in data_dict.items():
+                found_tables.append(d_dict)
 
         if "current_table_name" not in st.session_state or st.session_state.current_table_name == "":
             st.session_state.current_table_name = None
@@ -226,7 +228,7 @@ def get_metadata_form():
                     st.download_button(
                         label="Download",
                         data=create_download_data(data_source_id=t['data_source_id'], table_name=t['table_name']),
-                        file_name=f"{t['table_name']}.csv",
+                        file_name=f"{t['data_source_id']}_{t['data_source_name']}_{t['database_name']}_{t['table_name']}.csv",
                         mime='text/csv',
                     )
                 
