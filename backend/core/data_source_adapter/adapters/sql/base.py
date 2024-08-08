@@ -43,9 +43,12 @@ class SqlBase(DataSourceBase, ABC):
     def execute_query(self, query: str) -> list[tuple]:
         with self.engine.connect() as connection:
             result = connection.execute(text(query))
-            return result.fetchall()
+            rows = result.fetchall()
+            return [tuple(row) for row in rows]
 
     def get_columns_of_table(self, table: str) -> list[dict]:
+        if self.query_column_information == "":
+            return []
         query = self.query_column_information.format(table_name=table)
         columns = self.execute_query(query)
         column_info = []
@@ -66,6 +69,8 @@ class SqlBase(DataSourceBase, ABC):
         return column_info
 
     def get_relationships_info_of_table(self, table: str) -> list[dict]:
+        if self.query_relationship_information == "":
+            return []
         relationships = self.execute_query(self.query_relationship_information.format(table_name=table))
         relationship_info = []
         for relationship in relationships:
@@ -101,7 +106,7 @@ class SqlBase(DataSourceBase, ABC):
         return all_columns
 
     def select_column(self, table: str, column: str, limit: int = 1000) -> list[tuple]:
-        query = f"SELECT '{column}' FROM {table} LIMIT {limit}"  # noqa: S608
+        query = f"SELECT {column} FROM {table} LIMIT {limit}"  # noqa: S608
         return self.execute_query(query)
 
     def select_table(self, table: str, limit: int = 1000) -> list[tuple]:
@@ -110,6 +115,15 @@ class SqlBase(DataSourceBase, ABC):
 
 
 class SqlFileServerBase(SqlBase, ABC):
+    def validate_config(self) -> bool:
+        try:
+            SqlFileServerConfig(**self.config)
+        except Exception:
+            return False
+        return True
+
+
+class SqlCloudServerBase(SqlBase, ABC):
     def validate_config(self) -> bool:
         try:
             SqlFileServerConfig(**self.config)

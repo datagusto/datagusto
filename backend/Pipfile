@@ -46,6 +46,8 @@ cx_oracle = "*"
 duckdb = "*"
 duckdb_engine = "*"
 python-multipart = "*"
+google-cloud-bigquery = "*"
+sqlalchemy-bigquery = "*"
 
 [dev-packages]
 isort = "*"

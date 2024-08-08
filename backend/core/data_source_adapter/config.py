@@ -50,8 +50,8 @@ class SqlFileServerConfig(BaseModel):
 
     @property
     def uri(self) -> str:
-        datasource_base_path = os.getenv("DATASOURCE_BASE_PATH", "/datasource")
-        return f"{self.connector_type()}://{datasource_base_path}/{self.connector_type()}/{self.database}"
+        datasource_base_path = os.getenv("DATASOURCE_BASE_PATH", "./datasource")
+        return f"{self.connector_type()}:///{datasource_base_path}/{self.connector_type()}/{self.database}"
 
     @property
     def database(self) -> str:
@@ -71,6 +71,20 @@ class DuckDBConfig(SqlFileServerConfig):
 
     def connector_type(self) -> str:
         return "duckdb"
+
+
+class BigQueryConfig(BaseModel):
+    credentials: dict
+    project_id: str
+    dataset: str
+
+    @property
+    def database(self) -> str:
+        return self.dataset
+
+    @property
+    def uri(self) -> str:
+        return f"bigquery://{self.project_id}/{self.dataset}"
 
 
 class FileConfig(BaseModel):
