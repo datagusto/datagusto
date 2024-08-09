@@ -47,6 +47,6 @@ class BigQueryAdapter(SqlBase):
             database_name=self.sql_config.database,
         )
         self.query_column_information = COLUMN_INFORMATION_SQL.format(
-            dataset_name=self.sql_config.dataset,
+            dataset_name=self.sql_config.dataset_id,
             table_name="{table_name}",
         )

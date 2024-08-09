@@ -76,15 +76,15 @@ class DuckDBConfig(SqlFileServerConfig):
 class BigQueryConfig(BaseModel):
     credentials: dict
     project_id: str
-    dataset: str
+    dataset_id: str
 
     @property
     def database(self) -> str:
-        return self.dataset
+        return self.dataset_id
 
     @property
     def uri(self) -> str:
-        return f"bigquery://{self.project_id}/{self.dataset}"
+        return f"bigquery://{self.project_id}/{self.dataset_id}"
 
 
 class FileConfig(BaseModel):
