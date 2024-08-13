@@ -12,14 +12,14 @@ SELECT table_name FROM {database_name}.INFORMATION_SCHEMA.TABLES
 """
 
 COLUMN_INFORMATION_SQL = """
-SELECT 
+SELECT
   column_name,
   data_type AS column_type,
   '' AS extra,
   '' AS comment
-FROM 
+FROM
   `{dataset_name}`.INFORMATION_SCHEMA.COLUMNS
-WHERE 
+WHERE
   table_name = '{table_name}'
 """
 

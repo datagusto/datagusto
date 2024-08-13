@@ -1,7 +1,7 @@
 import os
+from urllib.parse import quote_plus
 
 from pydantic import BaseModel
-from urllib.parse import quote_plus
 
 
 class SqlConfig(BaseModel):
