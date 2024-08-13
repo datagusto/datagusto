@@ -48,6 +48,7 @@ duckdb_engine = "*"
 python-multipart = "*"
 google-cloud-bigquery = "*"
 sqlalchemy-bigquery = "*"
+pyodbc = "*"
 
 [dev-packages]
 isort = "*"

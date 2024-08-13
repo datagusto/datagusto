@@ -1,6 +1,7 @@
 import os
 
 from pydantic import BaseModel
+from urllib.parse import quote_plus
 
 
 class SqlConfig(BaseModel):
@@ -13,9 +14,12 @@ class SqlConfig(BaseModel):
     def connector_type(self) -> str:
         return ""
 
+    def encode_password(self) -> str:
+        return quote_plus(self.password)
+
     @property
     def uri(self) -> str:
-        return f"{self.connector_type()}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+        return f"{self.connector_type()}://{self.username}:{self.encode_password()}@{self.host}:{self.port}/{self.database}"
 
 
 class MySqlConfig(SqlConfig):
@@ -40,9 +44,21 @@ class OracleConfig(SqlConfig):
     @property
     def uri(self) -> str:
         return (
-            f"{self.connector_type()}://{self.username}:{self.password}"
+            f"{self.connector_type()}://{self.username}:{self.encode_password()}"
             f"@{self.host}:{self.port}/?service_name={self.database}"
         )
+
+
+class MsSqlConfig(SqlConfig):
+    schema: str = "dbo"
+
+    def connector_type(self) -> str:
+        return "mssql+pyodbc"
+
+    @property
+    def uri(self) -> str:
+        _uri = super().uri
+        return f"{_uri}?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
 
 
 class SqlFileServerConfig(BaseModel):
