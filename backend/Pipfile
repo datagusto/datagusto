@@ -49,6 +49,7 @@ python-multipart = "*"
 google-cloud-bigquery = "*"
 sqlalchemy-bigquery = "*"
 pyodbc = "*"
+snowflake-sqlalchemy = "*"
 
 [dev-packages]
 isort = "*"

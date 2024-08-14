@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from urllib.parse import quote_plus
 
 from pydantic import BaseModel
@@ -59,6 +60,20 @@ class MsSqlConfig(SqlConfig):
     def uri(self) -> str:
         _uri = super().uri
         return f"{_uri}?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+
+
+class SnowflakeConfig(SqlConfig):
+    host: Optional[str] = None
+    port: Optional[int] = None
+    account: str
+    schema: str = "public"
+
+    def connector_type(self) -> str:
+        return "snowflake"
+
+    @property
+    def uri(self) -> str:
+        return f"{self.connector_type()}://{self.username}:{self.encode_password()}@{self.account}/{self.database}"
 
 
 class SqlFileServerConfig(BaseModel):

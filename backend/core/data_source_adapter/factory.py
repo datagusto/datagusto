@@ -8,6 +8,7 @@ from .adapters.sql.mssql import MsSqlAdapter
 from .adapters.sql.mysql import MySqlAdapter
 from .adapters.sql.oracle import OracleAdapter
 from .adapters.sql.postgres import PostgreSqlAdapter
+from .adapters.sql.snowflake import SnowflakeAdapter
 from .adapters.sql.sqlite import SqliteAdapter
 from .types import DataSourceType
 
@@ -19,7 +20,7 @@ logger = getLogger("uvicorn.app")
 ADAPTERS = {
     DataSourceType.PostgreSQL: PostgreSqlAdapter,
     DataSourceType.BigQuery: BigQueryAdapter,
-    DataSourceType.Snowflake: None,
+    DataSourceType.Snowflake: SnowflakeAdapter,
     DataSourceType.Redshift: None,
     DataSourceType.Databricks: None,
     DataSourceType.DuckDB: DuckDBAdapter,
