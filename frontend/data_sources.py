@@ -197,7 +197,8 @@ def get_default_port(db_type):
     DEFAULT_PORTS = {
         "mysql": 3306,
         "postgresql": 5432,
-        "oracle": 1521
+        "oracle": 1521,
+        "mssql": 1433,
     }
     return DEFAULT_PORTS.get(db_type, 3306)
 
@@ -218,7 +219,7 @@ def add_data_source_form(default_port, selected_db_type):
             # file
             data_source_file = st.file_uploader("Data source file: Choose a CSV file to be upload:", type="csv")
             file_type = st.selectbox("File Type", ["csv"])
-        elif dtype in ["mysql", "postgresql", "oracle"]:
+        elif dtype in ["mysql", "postgresql", "oracle", "mssql"]:
             # database (mysql, postgres)
             hostname = st.text_input("Hostname")
             port = st.number_input("Port", value=default_port)  # Use the default port here
@@ -227,11 +228,23 @@ def add_data_source_form(default_port, selected_db_type):
                 schema = st.text_input("Schema", value="public")
             if dtype == "oracle":
                 schema = st.text_input("Schema", value="system")
+            if dtype == "mssql":
+                schema = st.text_input("Schema", value="dbo")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
+        elif dtype in ["snowflake"]:
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            database_name = st.text_input("Database Name")
+            account = st.text_input("Account Identifier")
+            schema = st.text_input("Schema", value="public")
         elif dtype in ["duckdb", "sqlite"]:
             file_name = st.text_input("File Name")
             schema = st.text_input("Schema", value="main")
+        elif dtype in ["bigquery"]:
+            project_id = st.text_input("Project ID")
+            dataset_id = st.text_input("Dataset ID")
+            service_account_key = st.file_uploader("Service Account Key", type="json")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -245,6 +258,10 @@ def add_data_source_form(default_port, selected_db_type):
             mandatory_fields = [name, description, dtype, data_source_file]
         elif dtype in ["duckdb", "sqlite"]:
             mandatory_fields = [name, description, dtype, file_name]
+        elif dtype in ["snowflake"]:
+            mandatory_fields = [name, description, dtype, account, database_name, username, password]
+        elif dtype in ["bigquery"]:
+            mandatory_fields = [name, description, dtype, project_id, dataset_id, service_account_key]
         else:
             mandatory_fields = [name, description, dtype, hostname, port, database_name, username, password]
         missing_fields = [field_name for field_name, field_value in
@@ -260,7 +277,7 @@ def add_data_source_form(default_port, selected_db_type):
                 if dtype == "file":
                     connection = {}
                     result = conn.test_data_source_connection(name, dtype, description, connection)
-                if dtype in ["mysql", "postgresql", "oracle"]:
+                if dtype in ["mysql", "postgresql", "oracle", "mssql"]:
                     connection = {
                         "host": hostname,
                         "port": port,
@@ -268,13 +285,31 @@ def add_data_source_form(default_port, selected_db_type):
                         "password": password,
                         "database": database_name
                     }
-                    if dtype in ["postgresql", "oracle"]:
+                    if dtype not in ["mysql"]:
                         connection["schema"] = schema
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
+                if dtype in ["snowflake"]:
+                    connection = {
+                        "account": account,
+                        "username": username,
+                        "password": password,
+                        "database": database_name,
+                        "schema": schema
+                    }
                     result = conn.test_data_source_connection(name, dtype, description, connection)
                 if dtype in ["duckdb", "sqlite"]:
                     connection = {
                         "file_name": file_name,
                         "schema": schema
+                    }
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
+                if dtype in ["bigquery"]:
+                    file_content = service_account_key.read().decode("utf-8")
+                    json_data = json.loads(file_content)
+                    connection = {
+                        "project_id": project_id,
+                        "dataset_id": dataset_id,
+                        "credentials": json_data
                     }
                     result = conn.test_data_source_connection(name, dtype, description, connection)
 
@@ -297,13 +332,7 @@ def add_data_source_form(default_port, selected_db_type):
                     connection = {}
                     result = conn.create_data_source_as_file(name, dtype, description, connection, data_source_file,
                                                              file_type)
-                if dtype in ["duckdb", "sqlite"]:
-                    connection = {
-                        "file_name": file_name,
-                        "schema": schema
-                    }
-                    result = conn.create_data_source(name, dtype, description, connection)
-                if dtype in ["mysql", "postgresql", "oracle"]:
+                if dtype in ["mysql", "postgresql", "oracle", "mssql"]:
                     connection = {
                         "host": hostname,
                         "port": port,
@@ -311,8 +340,32 @@ def add_data_source_form(default_port, selected_db_type):
                         "password": password,
                         "database": database_name
                     }
-                    if dtype in ["postgresql", "oracle"]:
+                    if dtype not in ["mysql"]:
                         connection["schema"] = schema
+                    result = conn.create_data_source(name, dtype, description, connection)
+                if dtype in ["snowflake"]:
+                    connection = {
+                        "account": account,
+                        "username": username,
+                        "password": password,
+                        "database": database_name,
+                        "schema": schema
+                    }
+                    result = conn.create_data_source(name, dtype, description, connection)
+                if dtype in ["duckdb", "sqlite"]:
+                    connection = {
+                        "file_name": file_name,
+                        "schema": schema
+                    }
+                    result = conn.create_data_source(name, dtype, description, connection)
+                if dtype in ["bigquery"]:
+                    file_content = service_account_key.read().decode("utf-8")
+                    json_data = json.loads(file_content)
+                    connection = {
+                        "project_id": project_id,
+                        "dataset_id": dataset_id,
+                        "credentials": json_data
+                    }
                     result = conn.create_data_source(name, dtype, description, connection)
                 status_code = result.pop("status_code", 200)
 

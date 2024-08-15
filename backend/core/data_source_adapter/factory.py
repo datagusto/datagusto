@@ -2,10 +2,13 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from .adapters.file import FileDataSource
+from .adapters.sql.bigquery import BigQueryAdapter
 from .adapters.sql.duckdb import DuckDBAdapter
+from .adapters.sql.mssql import MsSqlAdapter
 from .adapters.sql.mysql import MySqlAdapter
 from .adapters.sql.oracle import OracleAdapter
 from .adapters.sql.postgres import PostgreSqlAdapter
+from .adapters.sql.snowflake import SnowflakeAdapter
 from .adapters.sql.sqlite import SqliteAdapter
 from .types import DataSourceType
 
@@ -16,12 +19,12 @@ logger = getLogger("uvicorn.app")
 
 ADAPTERS = {
     DataSourceType.PostgreSQL: PostgreSqlAdapter,
-    DataSourceType.BigQuery: None,
-    DataSourceType.Snowflake: None,
+    DataSourceType.BigQuery: BigQueryAdapter,
+    DataSourceType.Snowflake: SnowflakeAdapter,
     DataSourceType.Redshift: None,
     DataSourceType.Databricks: None,
     DataSourceType.DuckDB: DuckDBAdapter,
-    DataSourceType.MicrosoftSQLServer: None,
+    DataSourceType.MicrosoftSQLServer: MsSqlAdapter,
     DataSourceType.MongoDB: None,
     DataSourceType.Oracle: OracleAdapter,
     DataSourceType.SAPHana: None,
