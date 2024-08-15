@@ -232,6 +232,12 @@ def add_data_source_form(default_port, selected_db_type):
                 schema = st.text_input("Schema", value="dbo")
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
+        elif dtype in ["snowflake"]:
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            database_name = st.text_input("Database Name")
+            account = st.text_input("Account Identifier")
+            schema = st.text_input("Schema", value="public")
         elif dtype in ["duckdb", "sqlite"]:
             file_name = st.text_input("File Name")
             schema = st.text_input("Schema", value="main")
@@ -252,6 +258,8 @@ def add_data_source_form(default_port, selected_db_type):
             mandatory_fields = [name, description, dtype, data_source_file]
         elif dtype in ["duckdb", "sqlite"]:
             mandatory_fields = [name, description, dtype, file_name]
+        elif dtype in ["snowflake"]:
+            mandatory_fields = [name, description, dtype, account, database_name, username, password]
         elif dtype in ["bigquery"]:
             mandatory_fields = [name, description, dtype, project_id, dataset_id, service_account_key]
         else:
@@ -279,6 +287,15 @@ def add_data_source_form(default_port, selected_db_type):
                     }
                     if dtype not in ["mysql"]:
                         connection["schema"] = schema
+                    result = conn.test_data_source_connection(name, dtype, description, connection)
+                if dtype in ["snowflake"]:
+                    connection = {
+                        "account": account,
+                        "username": username,
+                        "password": password,
+                        "database": database_name,
+                        "schema": schema
+                    }
                     result = conn.test_data_source_connection(name, dtype, description, connection)
                 if dtype in ["duckdb", "sqlite"]:
                     connection = {
@@ -325,6 +342,15 @@ def add_data_source_form(default_port, selected_db_type):
                     }
                     if dtype not in ["mysql"]:
                         connection["schema"] = schema
+                    result = conn.create_data_source(name, dtype, description, connection)
+                if dtype in ["snowflake"]:
+                    connection = {
+                        "account": account,
+                        "username": username,
+                        "password": password,
+                        "database": database_name,
+                        "schema": schema
+                    }
                     result = conn.create_data_source(name, dtype, description, connection)
                 if dtype in ["duckdb", "sqlite"]:
                     connection = {
