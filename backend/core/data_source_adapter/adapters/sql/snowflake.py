@@ -1,5 +1,7 @@
 from logging import getLogger
+
 from sqlalchemy import create_engine
+
 from ...config import SnowflakeConfig
 from .base import SqlBase
 
@@ -33,7 +35,6 @@ SHOW IMPORTED KEYS IN {database_name}.{database_schema}.{table_name}
 
 
 class SnowflakeAdapter(SqlBase):
-
     def validate_config(self) -> bool:
         try:
             SnowflakeConfig(**self.config)
